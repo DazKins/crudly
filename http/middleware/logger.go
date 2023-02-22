@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type logger struct {
@@ -60,12 +61,14 @@ func (p logger) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w ht
 
 		h(ww, r)
 
+		body := strings.TrimSuffix(string(ww.loggerDetails.body), "\n")
+
 		log := fmt.Sprintf(
 			"[%s %s] %d\nResponse Body: %s\n",
 			r.Method,
 			r.URL,
 			ww.loggerDetails.status,
-			string(ww.loggerDetails.body),
+			body,
 		)
 
 		if ww.loggerDetails.err != nil {
