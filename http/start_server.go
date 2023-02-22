@@ -139,6 +139,17 @@ func StartServer(
 	fmt.Printf("Starting server...\n")
 
 	if config.HttpsEnabled {
+		go func() {
+			err := http.ListenAndServe(
+				":80",
+				http.HandlerFunc(HttpsRedirect),
+			)
+
+			if err != nil {
+				fmt.Printf("error starting https redirector: %s", err.Error())
+			}
+		}()
+
 		err := http.ListenAndServeTLS(
 			":443",
 			config.SslCertificateFile,
