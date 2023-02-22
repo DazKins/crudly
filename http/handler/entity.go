@@ -2,6 +2,7 @@ package handler
 
 import (
 	"crudly/http/dto"
+	"crudly/http/middleware"
 	"crudly/model"
 	"crudly/util"
 	"encoding/json"
@@ -62,6 +63,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -71,6 +73,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	entityIdResult := entityIdDto.ToModel()
 
 	if entityIdResult.IsErr() {
+		middleware.AttachError(w, entityIdResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -82,6 +85,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if entityResult.IsErr() {
+		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(500)
 		return
 	}
@@ -103,6 +107,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -118,6 +123,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		limitResult := paginationLimitPathParam.ToModel()
 
 		if limitResult.IsErr() {
+			middleware.AttachError(w, limitResult.UnwrapErr())
 			w.WriteHeader(400)
 			return
 		}
@@ -131,6 +137,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		offsetResult := paginationOffsetPathParam.ToModel()
 
 		if offsetResult.IsErr() {
+			middleware.AttachError(w, offsetResult.UnwrapErr())
 			w.WriteHeader(400)
 			return
 		}
@@ -145,6 +152,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if entitiesResult.IsErr() {
+		middleware.AttachError(w, entitiesResult.UnwrapErr())
 		w.WriteHeader(500)
 		return
 	}
@@ -166,6 +174,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -175,6 +184,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	entityIdResult := entityIdDto.ToModel()
 
 	if entityIdResult.IsErr() {
+		middleware.AttachError(w, entityIdResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -191,6 +201,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	entityResult := entityDto.ToModel()
 
 	if entityResult.IsErr() {
+		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -203,6 +214,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		middleware.AttachError(w, err)
 		w.WriteHeader(500)
 		return
 	}
@@ -218,6 +230,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -234,6 +247,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	entityResult := entityDto.ToModel()
 
 	if entityResult.IsErr() {
+		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -245,6 +259,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		middleware.AttachError(w, err)
 		w.WriteHeader(500)
 		return
 	}

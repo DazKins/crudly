@@ -3,6 +3,7 @@ package handler
 import (
 	"crudly/config"
 	"crudly/http/dto"
+	"crudly/http/middleware"
 	"crudly/model"
 	"crudly/util"
 	"encoding/json"
@@ -34,6 +35,7 @@ func (a adminProjectHandler) PostProject(w http.ResponseWriter, r *http.Request)
 	createProjectResult := a.projectCreator.CreateProject()
 
 	if createProjectResult.IsErr() {
+		middleware.AttachError(w, createProjectResult.UnwrapErr())
 		w.WriteHeader(500)
 		return
 	}

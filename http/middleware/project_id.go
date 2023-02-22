@@ -19,6 +19,7 @@ func (projectId) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w h
 		projectIdResult := projectIdDto.ToModel()
 
 		if projectIdResult.IsErr() {
+			AttachError(w, projectIdResult.UnwrapErr())
 			w.WriteHeader(400)
 			return
 		}

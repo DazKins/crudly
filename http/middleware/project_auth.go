@@ -27,6 +27,7 @@ func (p projectAuth) Attach(h func(w http.ResponseWriter, r *http.Request)) func
 		authInfoResult := p.projectAuthInfoGetter.GetProjectAuthInfo(projectId)
 
 		if authInfoResult.IsErr() {
+			AttachError(w, authInfoResult.UnwrapErr())
 			w.WriteHeader(500)
 			return
 		}

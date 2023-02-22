@@ -16,34 +16,40 @@ func NewLogger(writer io.Writer) logger {
 	}
 }
 
-type wrappedWriter struct {
-	writer http.ResponseWriter
-
+type loggerDetails struct {
 	status int
 	body   []byte
+	err    error
+}
+
+type wrappedWriter struct {
+	writer        http.ResponseWriter
+	loggerDetails *loggerDetails
 }
 
 func wrapWriter(w http.ResponseWriter) wrappedWriter {
 	return wrappedWriter{
 		writer: w,
 
-		status: 200,
-		body:   []byte(""),
+		loggerDetails: &loggerDetails{
+			status: 200,
+			body:   []byte(""),
+		},
 	}
 }
 
-func (w *wrappedWriter) WriteHeader(statusCode int) {
-	w.status = statusCode
+func (w wrappedWriter) WriteHeader(statusCode int) {
+	w.loggerDetails.status = statusCode
 
 	w.writer.WriteHeader(statusCode)
 }
 
-func (w *wrappedWriter) Header() http.Header {
+func (w wrappedWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-func (w *wrappedWriter) Write(b []byte) (int, error) {
-	w.body = b
+func (w wrappedWriter) Write(b []byte) (int, error) {
+	w.loggerDetails.body = b
 
 	return w.writer.Write(b)
 }
@@ -52,16 +58,32 @@ func (p logger) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		ww := wrapWriter(w)
 
-		h(&ww, r)
+		h(ww, r)
 
 		log := fmt.Sprintf(
-			"[%s %s] %d\nResponse Body: %s\n\n",
+			"[%s %s] %d\nResponse Body: %s\n",
 			r.Method,
 			r.URL,
-			ww.status,
-			string(ww.body),
+			ww.loggerDetails.status,
+			string(ww.loggerDetails.body),
 		)
+
+		if ww.loggerDetails.err != nil {
+			log += fmt.Sprintf("Error: %s\n", ww.loggerDetails.err)
+		}
+
+		log += "\n"
 
 		p.writer.Write([]byte(log))
 	}
+}
+
+func AttachError(w http.ResponseWriter, err error) {
+	wrapped, ok := w.(wrappedWriter)
+
+	if !ok {
+		return
+	}
+
+	wrapped.loggerDetails.err = err
 }

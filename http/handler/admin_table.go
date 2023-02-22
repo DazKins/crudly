@@ -8,6 +8,7 @@ import (
 
 	"crudly/errs"
 	"crudly/http/dto"
+	"crudly/http/middleware"
 	"crudly/model"
 	"crudly/util"
 
@@ -48,6 +49,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -64,6 +66,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	tableSchemaResult := tableSchemaDto.ToModel()
 
 	if tableSchemaResult.IsErr() {
+		middleware.AttachError(w, tableSchemaResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -75,6 +78,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		middleware.AttachError(w, err)
 		w.WriteHeader(500)
 		return
 	}
@@ -90,6 +94,7 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	tableNameResult := tableNameDto.ToModel()
 
 	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
 		return
 	}
@@ -98,6 +103,8 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 
 	if tableSchemaResult.IsErr() {
 		err := tableSchemaResult.UnwrapErr()
+
+		middleware.AttachError(w, err)
 
 		if errors.As(err, new(errs.TableNotFoundError)) {
 			w.WriteHeader(404)
