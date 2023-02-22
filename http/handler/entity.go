@@ -65,6 +65,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -75,6 +76,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	if entityIdResult.IsErr() {
 		middleware.AttachError(w, entityIdResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid entity id"))
 		return
 	}
 
@@ -87,6 +89,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	if entityResult.IsErr() {
 		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting entity"))
 		return
 	}
 
@@ -109,6 +112,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -125,6 +129,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		if limitResult.IsErr() {
 			middleware.AttachError(w, limitResult.UnwrapErr())
 			w.WriteHeader(400)
+			w.Write([]byte("invalid limit query param"))
 			return
 		}
 
@@ -139,6 +144,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		if offsetResult.IsErr() {
 			middleware.AttachError(w, offsetResult.UnwrapErr())
 			w.WriteHeader(400)
+			w.Write([]byte("invalid offset query param"))
 			return
 		}
 
@@ -154,6 +160,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	if entitiesResult.IsErr() {
 		middleware.AttachError(w, entitiesResult.UnwrapErr())
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting entities"))
 		return
 	}
 
@@ -176,6 +183,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -186,6 +194,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	if entityIdResult.IsErr() {
 		middleware.AttachError(w, entityIdResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid entity id"))
 		return
 	}
 
@@ -203,6 +212,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	if entityResult.IsErr() {
 		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid entity"))
 		return
 	}
 
@@ -216,6 +226,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		middleware.AttachError(w, err)
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating entity"))
 		return
 	}
 }
@@ -232,6 +243,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -249,6 +261,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	if entityResult.IsErr() {
 		middleware.AttachError(w, entityResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid entity"))
 		return
 	}
 
@@ -261,6 +274,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		middleware.AttachError(w, err)
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating entity"))
 		return
 	}
 }

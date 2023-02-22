@@ -21,6 +21,7 @@ func (projectId) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w h
 		if projectIdResult.IsErr() {
 			AttachError(w, projectIdResult.UnwrapErr())
 			w.WriteHeader(400)
+			w.Write([]byte("invalid project id header"))
 			return
 		}
 

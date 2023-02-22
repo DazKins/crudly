@@ -29,6 +29,7 @@ func NewAdminProjectHandler(config config.Config, projectCreator projectCreator)
 func (a adminProjectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("x-api-key") != a.config.ProjectCreationApiKey {
 		w.WriteHeader(401)
+		w.Write([]byte("incorrect api key"))
 		return
 	}
 
@@ -37,6 +38,7 @@ func (a adminProjectHandler) PostProject(w http.ResponseWriter, r *http.Request)
 	if createProjectResult.IsErr() {
 		middleware.AttachError(w, createProjectResult.UnwrapErr())
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating project"))
 		return
 	}
 

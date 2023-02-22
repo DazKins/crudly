@@ -29,6 +29,7 @@ func (p projectAuth) Attach(h func(w http.ResponseWriter, r *http.Request)) func
 		if authInfoResult.IsErr() {
 			AttachError(w, authInfoResult.UnwrapErr())
 			w.WriteHeader(500)
+			w.Write([]byte("unexpected error getting project auth details"))
 			return
 		}
 
@@ -41,6 +42,7 @@ func (p projectAuth) Attach(h func(w http.ResponseWriter, r *http.Request)) func
 
 		if hash != authInfo.SaltedHash {
 			w.WriteHeader(401)
+			w.Write([]byte("unauthorized to access project"))
 			return
 		}
 

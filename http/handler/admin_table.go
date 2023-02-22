@@ -51,6 +51,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -68,6 +69,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	if tableSchemaResult.IsErr() {
 		middleware.AttachError(w, tableSchemaResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table schema"))
 		return
 	}
 
@@ -80,6 +82,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		middleware.AttachError(w, err)
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating table"))
 		return
 	}
 }
@@ -96,6 +99,7 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	if tableNameResult.IsErr() {
 		middleware.AttachError(w, tableNameResult.UnwrapErr())
 		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
 		return
 	}
 
@@ -108,10 +112,12 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 
 		if errors.As(err, new(errs.TableNotFoundError)) {
 			w.WriteHeader(404)
+			w.Write([]byte("table not found"))
 			return
 		}
 
 		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting table"))
 		return
 	}
 
