@@ -136,34 +136,10 @@ func StartServer(
 		entityManager,
 	)
 
-	fmt.Printf("Starting server...\n")
+	fmt.Printf("Starting server on port %d...\n", config.Port)
 
-	if config.HttpsEnabled {
-		go func() {
-			err := http.ListenAndServe(
-				":80",
-				http.HandlerFunc(HttpsRedirect),
-			)
-
-			if err != nil {
-				fmt.Printf("error starting https redirector: %s", err.Error())
-			}
-		}()
-
-		err := http.ListenAndServeTLS(
-			":443",
-			config.SslCertificateFile,
-			config.SslPrivateKeyFile,
-			handler,
-		)
-
-		if err != nil {
-			fmt.Printf("error starting server: %s", err.Error())
-		}
-	} else {
-		http.ListenAndServe(
-			":80",
-			handler,
-		)
-	}
+	http.ListenAndServe(
+		fmt.Sprintf(":%d", config.Port),
+		handler,
+	)
 }

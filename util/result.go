@@ -33,6 +33,13 @@ func (r Result[T]) Unwrap() T {
 	return r.value
 }
 
+func (r Result[T]) UnwrapOrDefault(def T) T {
+	if r.IsErr() {
+		return def
+	}
+	return r.value
+}
+
 func (r Result[T]) UnwrapErr() error {
 	if r.IsOk() {
 		panic("unwrap err called on ok result")

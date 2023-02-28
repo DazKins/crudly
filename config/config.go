@@ -1,18 +1,16 @@
 package config
 
 import (
+	"crudly/util"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	HttpsEnabled          bool
-	SslCertificateFile    string
-	SslPrivateKeyFile     string
+	Port                  uint
 	PostgresHost          string
 	PostgresPort          uint
 	PostgresUsername      string
@@ -25,72 +23,54 @@ func InitialiseConfg() Config {
 	godotenv.Load()
 
 	return Config{
-		HttpsEnabled:          getBoolOrPanic("HTTPS_ENABLED"),
-		SslCertificateFile:    getEnvOrDefault("SSL_CERTIFICATE_FILE", ""),
-		SslPrivateKeyFile:     getEnvOrDefault("SSL_PRIVATE_KEY_FILE", ""),
-		PostgresHost:          getEnvOrPanic("POSTGRES_HOST"),
-		PostgresPort:          getUintOrPanic("POSTGRES_PORT"),
-		PostgresUsername:      getEnvOrPanic("POSTGRES_USERNAME"),
-		PostgresPassword:      getEnvOrPanic("POSTGRES_PASSWORD"),
-		PostgresDatabase:      getEnvOrPanic("POSTGRES_DATABASE"),
-		ProjectCreationApiKey: getEnvOrPanic("PROJECT_CREATION_API_KEY"),
+		Port:                  getUint("PORT").UnwrapOrDefault(80),
+		PostgresHost:          getEnv("POSTGRES_HOST").Unwrap(),
+		PostgresPort:          getUint("POSTGRES_PORT").Unwrap(),
+		PostgresUsername:      getEnv("POSTGRES_USERNAME").Unwrap(),
+		PostgresPassword:      getEnv("POSTGRES_PASSWORD").Unwrap(),
+		PostgresDatabase:      getEnv("POSTGRES_DATABASE").Unwrap(),
+		ProjectCreationApiKey: getEnv("PROJECT_CREATION_API_KEY").Unwrap(),
 	}
 }
 
-func getBoolOrPanic(env string) bool {
-	envVar := getEnvOrPanic(env)
+func getUint(env string) util.Result[uint] {
+	numResult := getInt(env)
 
-	lower := strings.ToLower(envVar)
-
-	if lower == "false" {
-		return false
+	if numResult.IsErr() {
+		return util.ResultErr[uint](numResult.UnwrapErr())
 	}
 
-	if lower == "true" {
-		return true
-	}
-
-	panic(fmt.Sprintf("env var: %s is not a valid boolean", envVar))
-}
-
-func getUintOrPanic(env string) uint {
-	num := getIntOrPanic(env)
+	num := numResult.Unwrap()
 
 	if num < 0 {
-		panic(fmt.Sprintf("env var: %d is less than zero", num))
+		return util.ResultErr[uint](fmt.Errorf("env var: %d is less than zero", num))
 	}
 
-	return uint(num)
+	return util.ResultOk(uint(num))
 }
 
-func getIntOrPanic(env string) int {
-	envVar := getEnvOrPanic(env)
+func getInt(env string) util.Result[int] {
+	envResult := getEnv(env)
 
-	num, err := strconv.Atoi(envVar)
+	if envResult.IsErr() {
+		return util.ResultErr[int](envResult.UnwrapErr())
+	}
+
+	num, err := strconv.Atoi(envResult.Unwrap())
 
 	if err != nil {
-		panic(fmt.Sprintf("env var: %s is not a valid number", envVar))
+		return util.ResultErr[int](fmt.Errorf("env var: %s is not a valid number", envResult.Unwrap()))
 	}
 
-	return num
+	return util.ResultOk(num)
 }
 
-func getEnvOrPanic(env string) string {
+func getEnv(env string) util.Result[string] {
 	envVar, present := os.LookupEnv(env)
 
 	if !present {
-		panic(fmt.Sprintf("env var: %s not present", env))
+		return util.ResultErr[string](fmt.Errorf("env var: %s not present", env))
 	}
 
-	return envVar
-}
-
-func getEnvOrDefault(env string, def string) string {
-	envVar, present := os.LookupEnv(env)
-
-	if !present {
-		return def
-	}
-
-	return envVar
+	return util.ResultOk(envVar)
 }
