@@ -28,7 +28,6 @@ type entityCreator interface {
 	CreateEntity(
 		projectId model.ProjectId,
 		tableName model.TableName,
-		tableSchema model.TableSchema,
 		id model.EntityId,
 		entity model.Entity,
 	) error
@@ -38,21 +37,28 @@ type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) util.Result[model.TableSchema]
 }
 
+type entityValidator interface {
+	ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error
+}
+
 type entityManager struct {
 	entityFetcher     entityFetcher
 	entityCreator     entityCreator
 	tableSchemaGetter tableSchemaGetter
+	entityValidator   entityValidator
 }
 
 func NewEntityManager(
 	entityFetcher entityFetcher,
 	entityCreator entityCreator,
 	tableSchemaGetter tableSchemaGetter,
+	entityValidator entityValidator,
 ) entityManager {
 	return entityManager{
 		entityFetcher,
 		entityCreator,
 		tableSchemaGetter,
+		entityValidator,
 	}
 }
 
@@ -106,10 +112,17 @@ func (e entityManager) CreateEntityWithId(
 		return fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr())
 	}
 
+	tableSchema := tableSchemaResult.Unwrap()
+
+	err := e.entityValidator.ValidateEntity(entity, tableSchema)
+
+	if err != nil {
+		return fmt.Errorf("error validating entity: %w", err)
+	}
+
 	return e.entityCreator.CreateEntity(
 		projectId,
 		tableName,
-		tableSchemaResult.Unwrap(),
 		id,
 		entity,
 	)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crudly/app"
+	"crudly/app/validation"
 	"crudly/config"
 	"crudly/http"
 	"crudly/postgres"
@@ -28,9 +29,16 @@ func main() {
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 
+	entityValidtor := validation.NewEntityValidator()
+
 	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
 	tableManager := app.NewTableManager(postgresTableGetterService, postgresTableCreatorService)
-	entityManager := app.NewEntityManager(postgresEntityFetcherService, postgresEntityCreatorService, tableManager)
+	entityManager := app.NewEntityManager(
+		postgresEntityFetcherService,
+		postgresEntityCreatorService,
+		tableManager,
+		entityValidtor,
+	)
 
 	http.StartServer(
 		config,

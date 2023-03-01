@@ -3,10 +3,11 @@ package model
 type FieldSchema uint
 
 const (
-	FieldSchemaInteger FieldSchema = 0
-	FieldSchemaString  FieldSchema = 1
-	FieldSchemaBoolean FieldSchema = 2
-	FieldSchemaId      FieldSchema = 3
+	FieldSchemaId      FieldSchema = 0
+	FieldSchemaInteger FieldSchema = 1
+	FieldSchemaString  FieldSchema = 2
+	FieldSchemaBoolean FieldSchema = 3
+	FieldSchemaTime    FieldSchema = 4
 )
 
 type TableName string

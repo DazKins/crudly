@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -151,6 +152,14 @@ func parsePostgresFieldString(str string, fieldSchema model.FieldSchema) any {
 		return true
 	case model.FieldSchemaString:
 		return str
+	case model.FieldSchemaTime:
+		time, err := time.Parse(PostgresTimeFormat, str)
+
+		if err != nil {
+			panic(fmt.Sprintf("unexpected time format: %s", str))
+		}
+
+		return time
 	}
 
 	return nil

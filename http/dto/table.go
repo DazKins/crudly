@@ -11,26 +11,32 @@ type FieldSchemaDto string
 
 func (e FieldSchemaDto) ToModel() util.Result[model.FieldSchema] {
 	switch strings.ToLower(string(e)) {
+	case "id":
+		return util.ResultOk(model.FieldSchemaId)
 	case "integer":
 		return util.ResultOk(model.FieldSchemaInteger)
 	case "string":
 		return util.ResultOk(model.FieldSchemaString)
 	case "boolean":
 		return util.ResultOk(model.FieldSchemaBoolean)
+	case "time":
+		return util.ResultOk(model.FieldSchemaTime)
 	}
 	return util.ResultErr[model.FieldSchema](fmt.Errorf("unrecognised field schema: %s", string(e)))
 }
 
 func GetFieldSchemaDto(schema model.FieldSchema) FieldSchemaDto {
 	switch schema {
+	case model.FieldSchemaId:
+		return FieldSchemaDto("id")
 	case model.FieldSchemaBoolean:
 		return FieldSchemaDto("boolean")
 	case model.FieldSchemaInteger:
 		return FieldSchemaDto("integer")
 	case model.FieldSchemaString:
 		return FieldSchemaDto("string")
-	case model.FieldSchemaId:
-		return FieldSchemaDto("id")
+	case model.FieldSchemaTime:
+		return FieldSchemaDto("time")
 	}
 	panic(fmt.Sprintf("invalid field schema has entered the system: %+v", schema))
 }

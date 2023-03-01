@@ -64,14 +64,16 @@ func (p postgresTableFetcher) FetchTableSchema(projectId model.ProjectId, name m
 
 func getFieldSchemaFromPostgresDataType(dataType string) util.Result[model.FieldSchema] {
 	switch strings.ToLower(dataType) {
+	case "uuid":
+		return util.ResultOk(model.FieldSchemaId)
 	case "integer":
 		return util.ResultOk(model.FieldSchemaInteger)
 	case "boolean":
 		return util.ResultOk(model.FieldSchemaBoolean)
 	case "character varying":
 		return util.ResultOk(model.FieldSchemaString)
-	case "uuid":
-		return util.ResultOk(model.FieldSchemaId)
+	case "timestamp without time zone":
+		return util.ResultOk(model.FieldSchemaTime)
 	}
 	return util.ResultErr[model.FieldSchema](fmt.Errorf("unsupported postgres datatype: %s", dataType))
 }

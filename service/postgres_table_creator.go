@@ -63,14 +63,16 @@ func getPostgresFieldQuery(key string, schema model.FieldSchema) string {
 
 func getPostgresDatatype(schema model.FieldSchema) string {
 	switch schema {
+	case model.FieldSchemaId:
+		return "uuid"
 	case model.FieldSchemaBoolean:
 		return "boolean"
 	case model.FieldSchemaInteger:
 		return "integer"
 	case model.FieldSchemaString:
 		return "varchar"
-	case model.FieldSchemaId:
-		return "uuid"
+	case model.FieldSchemaTime:
+		return "timestamp"
 	}
 	panic(fmt.Sprintf("invalid field schema has entered the system: %+v", schema))
 }

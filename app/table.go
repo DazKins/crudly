@@ -4,6 +4,7 @@ import (
 	"crudly/errs"
 	"crudly/model"
 	"crudly/util"
+	"fmt"
 )
 
 type tableCreator interface {
@@ -34,7 +35,17 @@ func NewTableManager(tableSchemaFetcher tableSchemaFetcher, tableCreator tableCr
 }
 
 func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.TableName) util.Result[model.TableSchema] {
-	return t.tableSchemaFetcher.FetchTableSchema(projectId, name)
+	tableSchemaResult := t.tableSchemaFetcher.FetchTableSchema(projectId, name)
+
+	if tableSchemaResult.IsErr() {
+		return util.ResultErr[model.TableSchema](fmt.Errorf("error fetching table schema: %w", tableSchemaResult.UnwrapErr()))
+	}
+
+	tableSchema := tableSchemaResult.Unwrap()
+
+	delete(tableSchema, "id")
+
+	return util.ResultOk(tableSchema)
 }
 
 func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error {
