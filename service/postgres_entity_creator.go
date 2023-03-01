@@ -75,20 +75,20 @@ func getPostgresCreateEntityQuery(
 const PostgresTimeFormat = "2006-01-02T15:04:05Z"
 
 func getPostgresFieldValue(field any) util.Result[string] {
-	switch field.(type) {
+	switch v := field.(type) {
 	case uuid.UUID:
-		return util.ResultOk("'" + field.(uuid.UUID).String() + "'")
+		return util.ResultOk("'" + v.String() + "'")
 	case int:
-		return util.ResultOk(fmt.Sprintf("'%d'", field.(int)))
+		return util.ResultOk(fmt.Sprintf("'%d'", v))
 	case string:
-		return util.ResultOk("'" + field.(string) + "'")
+		return util.ResultOk("'" + v + "'")
 	case bool:
-		if field.(bool) {
+		if v {
 			return util.ResultOk("'true'")
 		}
 		return util.ResultOk("'false'")
 	case time.Time:
-		return util.ResultOk("'" + field.(time.Time).Format(PostgresTimeFormat) + "'")
+		return util.ResultOk("'" + v.Format(PostgresTimeFormat) + "'")
 	}
 	return util.ResultErr[string](fmt.Errorf("field: %+v has unsupported type", field))
 }
