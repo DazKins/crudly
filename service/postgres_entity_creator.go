@@ -20,12 +20,14 @@ func NewPostgresEntityCreator(postgres *sql.DB) postgresEntityCreator {
 func (p postgresEntityCreator) CreateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	tableSchema model.TableSchema,
 	id model.EntityId,
 	entity model.Entity,
 ) error {
 	query := getPostgresCreateEntityQuery(
 		projectId,
 		tableName,
+		tableSchema,
 		id,
 		entity,
 	)
@@ -42,6 +44,7 @@ func (p postgresEntityCreator) CreateEntity(
 func getPostgresCreateEntityQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	tableSchema model.TableSchema,
 	id model.EntityId,
 	entity model.Entity,
 ) string {

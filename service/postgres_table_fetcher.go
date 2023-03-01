@@ -49,7 +49,7 @@ func (p postgresTableFetcher) FetchTableSchema(projectId model.ProjectId, name m
 		fieldSchemaResult := getFieldSchemaFromPostgresDataType(dataType)
 
 		if fieldSchemaResult.IsErr() {
-			return util.ResultErr[model.TableSchema](fmt.Errorf("error getting field schema: %w", err))
+			return util.ResultErr[model.TableSchema](fmt.Errorf("error getting field schema: %w", fieldSchemaResult.UnwrapErr()))
 		}
 
 		result[columnName] = fieldSchemaResult.Unwrap()

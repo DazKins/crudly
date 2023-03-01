@@ -29,8 +29,8 @@ func main() {
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 
 	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
-	entityManager := app.NewEntityManager(postgresEntityFetcherService, postgresEntityCreatorService)
 	tableManager := app.NewTableManager(postgresTableGetterService, postgresTableCreatorService)
+	entityManager := app.NewEntityManager(postgresEntityFetcherService, postgresEntityCreatorService, tableManager)
 
 	http.StartServer(
 		config,

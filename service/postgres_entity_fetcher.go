@@ -25,6 +25,7 @@ func NewPostgresEntityFetcher(postgres *sql.DB) postgresEntityFetcher {
 func (p postgresEntityFetcher) FetchEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	tableSchema model.TableSchema,
 	id model.EntityId,
 ) util.Result[model.Entity] {
 	query := getPostgresEntityQuery(
@@ -60,7 +61,9 @@ func (p postgresEntityFetcher) FetchEntity(
 		str := *(column.(*string))
 		columnType := *columnTypes[i]
 
-		entity[columnType.Name()] = parsePostgresFieldString(str, columnType)
+		fieldSchema := tableSchema[columnType.Name()]
+
+		entity[columnType.Name()] = parsePostgresFieldString(str, fieldSchema)
 	}
 
 	if err != nil {
@@ -73,6 +76,7 @@ func (p postgresEntityFetcher) FetchEntity(
 func (p postgresEntityFetcher) FetchEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	tableSchema model.TableSchema,
 	paginationParams model.PaginationParams,
 ) util.Result[model.Entities] {
 	query := getPostgresEntitiesQuery(
@@ -107,7 +111,9 @@ func (p postgresEntityFetcher) FetchEntities(
 			str := *(column.(*string))
 			columnType := *columnTypes[i]
 
-			entity[columnType.Name()] = parsePostgresFieldString(str, columnType)
+			fieldSchema := tableSchema[columnType.Name()]
+
+			entity[columnType.Name()] = parsePostgresFieldString(str, fieldSchema)
 		}
 
 		if err != nil {
@@ -120,9 +126,9 @@ func (p postgresEntityFetcher) FetchEntities(
 	return util.ResultOk(entities)
 }
 
-func parsePostgresFieldString(str string, columnType sql.ColumnType) any {
-	switch columnType.DatabaseTypeName() {
-	case "UUID":
+func parsePostgresFieldString(str string, fieldSchema model.FieldSchema) any {
+	switch fieldSchema {
+	case model.FieldSchemaId:
 		uuid, err := uuid.Parse(str)
 
 		if err != nil {
@@ -130,7 +136,7 @@ func parsePostgresFieldString(str string, columnType sql.ColumnType) any {
 		}
 
 		return uuid
-	case "INT4":
+	case model.FieldSchemaInteger:
 		integer, err := strconv.Atoi(str)
 
 		if err != nil {
@@ -138,12 +144,12 @@ func parsePostgresFieldString(str string, columnType sql.ColumnType) any {
 		}
 
 		return integer
-	case "BOOL":
+	case model.FieldSchemaBoolean:
 		if strings.ToLower(str) == "false" {
 			return false
 		}
 		return true
-	case "VARCHAR":
+	case model.FieldSchemaString:
 		return str
 	}
 
