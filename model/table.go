@@ -1,5 +1,7 @@
 package model
 
+import "crudly/util/optional"
+
 type FieldType uint8
 
 const (
@@ -8,6 +10,7 @@ const (
 	FieldTypeString  FieldType = 2
 	FieldTypeBoolean FieldType = 3
 	FieldTypeTime    FieldType = 4
+	FieldTypeEnum    FieldType = 5
 )
 
 type TableName string
@@ -17,7 +20,8 @@ func (t TableName) String() string {
 }
 
 type FieldDefinition struct {
-	Type FieldType
+	Type   FieldType
+	Values optional.Optional[[]string]
 }
 
 type TableSchema map[string]FieldDefinition

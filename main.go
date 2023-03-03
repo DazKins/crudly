@@ -30,9 +30,14 @@ func main() {
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 
 	entityValidtor := validation.NewEntityValidator()
+	tableSchemaValidator := validation.NewTableSchemaValidator()
 
 	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
-	tableManager := app.NewTableManager(postgresTableGetterService, postgresTableCreatorService)
+	tableManager := app.NewTableManager(
+		postgresTableGetterService,
+		postgresTableCreatorService,
+		tableSchemaValidator,
+	)
 	entityManager := app.NewEntityManager(
 		postgresEntityFetcherService,
 		postgresEntityCreatorService,

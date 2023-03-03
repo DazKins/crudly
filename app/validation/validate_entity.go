@@ -2,6 +2,7 @@ package validation
 
 import (
 	"crudly/model"
+	"crudly/util"
 	"fmt"
 	"math"
 	"time"
@@ -78,7 +79,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 		_, ok := field.(string)
 
 		if !ok {
-			return fmt.Errorf("field: \"%s\" is not a valid id", fieldName)
+			return fmt.Errorf("field: \"%s\" is not a valid string", fieldName)
 		}
 
 		return nil
@@ -86,7 +87,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 		stringVal, ok := field.(string)
 
 		if !ok {
-			return fmt.Errorf("field: \"%s\" is not a valid id", fieldName)
+			return fmt.Errorf("field: \"%s\" is not a valid time", fieldName)
 		}
 
 		time, err := time.Parse(TimeFormat, stringVal)
@@ -96,6 +97,20 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 		}
 
 		entity[fieldName] = time
+
+		return nil
+	case model.FieldTypeEnum:
+		val, ok := field.(string)
+
+		if !ok {
+			return fmt.Errorf("field: \"%s\" is not a valid enum", fieldName)
+		}
+
+		values := fieldDefinition.Values.Unwrap()
+
+		if !util.Contains(values, val) {
+			return fmt.Errorf("field: \"%s\" is not a supported enum. supported: %v", fieldName, values)
+		}
 
 		return nil
 	default:

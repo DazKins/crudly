@@ -22,15 +22,25 @@ type tableSchemaFetcher interface {
 	) result.Result[model.TableSchema]
 }
 
-type tableManager struct {
-	tableSchemaFetcher tableSchemaFetcher
-	tableCreator       tableCreator
+type tableSchemaValidator interface {
+	ValidateTableSchema(schema model.TableSchema) error
 }
 
-func NewTableManager(tableSchemaFetcher tableSchemaFetcher, tableCreator tableCreator) tableManager {
+type tableManager struct {
+	tableSchemaFetcher   tableSchemaFetcher
+	tableCreator         tableCreator
+	tableSchemaValidator tableSchemaValidator
+}
+
+func NewTableManager(
+	tableSchemaFetcher tableSchemaFetcher,
+	tableCreator tableCreator,
+	tableSchemaValidator tableSchemaValidator,
+) tableManager {
 	return tableManager{
 		tableSchemaFetcher,
 		tableCreator,
+		tableSchemaValidator,
 	}
 }
 
@@ -57,6 +67,12 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 
 	schema["id"] = model.FieldDefinition{
 		Type: model.FieldTypeId,
+	}
+
+	err := t.tableSchemaValidator.ValidateTableSchema(schema)
+
+	if err != nil {
+		return fmt.Errorf("table schema is not valid: %w", err)
 	}
 
 	return t.tableCreator.CreateTable(

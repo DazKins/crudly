@@ -160,6 +160,8 @@ func parsePostgresFieldString(str string, fieldType model.FieldType) any {
 		}
 
 		return time
+	case model.FieldTypeEnum:
+		return str
 	}
 
 	return nil

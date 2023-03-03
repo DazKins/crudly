@@ -2,6 +2,7 @@ package dto
 
 import (
 	"crudly/model"
+	"crudly/util/optional"
 	"crudly/util/result"
 	"fmt"
 	"strings"
@@ -21,6 +22,8 @@ func (t FieldTypeDto) ToModel() result.Result[model.FieldType] {
 		return result.Ok(model.FieldTypeBoolean)
 	case "time":
 		return result.Ok(model.FieldTypeTime)
+	case "enum":
+		return result.Ok(model.FieldTypeEnum)
 	}
 	return result.Err[model.FieldType](fmt.Errorf("unrecognised field type: %s", string(t)))
 }
@@ -37,12 +40,15 @@ func GetFieldTypeDto(fieldType model.FieldType) FieldTypeDto {
 		return FieldTypeDto("string")
 	case model.FieldTypeTime:
 		return FieldTypeDto("time")
+	case model.FieldTypeEnum:
+		return FieldTypeDto("enum")
 	}
 	panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldType))
 }
 
 type FieldDefinitionDto struct {
-	Type FieldTypeDto `json:"type"`
+	Type   FieldTypeDto `json:"type"`
+	Values *[]string    `json:"values,omitempty"`
 }
 
 func (d FieldDefinitionDto) ToModel() result.Result[model.FieldDefinition] {
@@ -55,13 +61,15 @@ func (d FieldDefinitionDto) ToModel() result.Result[model.FieldDefinition] {
 	fieldType := fieldTypeResult.Unwrap()
 
 	return result.Ok(model.FieldDefinition{
-		Type: fieldType,
+		Type:   fieldType,
+		Values: optional.FromPointer(d.Values),
 	})
 }
 
 func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 	return FieldDefinitionDto{
-		Type: GetFieldTypeDto(d.Type),
+		Type:   GetFieldTypeDto(d.Type),
+		Values: optional.ToPointer(d.Values),
 	}
 }
 

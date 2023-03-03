@@ -113,6 +113,8 @@ func getPostgresDatatype(fieldType model.FieldType) string {
 		return "varchar"
 	case model.FieldTypeTime:
 		return "timestamp"
+	case model.FieldTypeEnum:
+		return "varchar"
 	}
 	panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldType))
 }
