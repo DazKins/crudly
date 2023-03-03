@@ -1,13 +1,13 @@
 package model
 
-type FieldSchema uint
+type FieldType uint8
 
 const (
-	FieldSchemaId      FieldSchema = 0
-	FieldSchemaInteger FieldSchema = 1
-	FieldSchemaString  FieldSchema = 2
-	FieldSchemaBoolean FieldSchema = 3
-	FieldSchemaTime    FieldSchema = 4
+	FieldTypeId      FieldType = 0
+	FieldTypeInteger FieldType = 1
+	FieldTypeString  FieldType = 2
+	FieldTypeBoolean FieldType = 3
+	FieldTypeTime    FieldType = 4
 )
 
 type TableName string
@@ -16,4 +16,8 @@ func (t TableName) String() string {
 	return string(t)
 }
 
-type TableSchema map[string]FieldSchema
+type FieldDefinition struct {
+	Type FieldType
+}
+
+type TableSchema map[string]FieldDefinition

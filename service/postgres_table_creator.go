@@ -48,7 +48,7 @@ func getPostgresTableCreationQuery(
 ) string {
 	query := "CREATE TABLE \"" + getPostgresTableName(projectId, name) + "\"("
 	for k, v := range schema {
-		fieldQuery := getPostgresFieldQuery(k, v)
+		fieldQuery := getPostgresFieldQuery(k, v.Type)
 		query += fieldQuery + ","
 	}
 	query = strings.TrimSuffix(query, ",")
@@ -57,22 +57,22 @@ func getPostgresTableCreationQuery(
 	return query
 }
 
-func getPostgresFieldQuery(key string, schema model.FieldSchema) string {
-	return key + " " + getPostgresDatatype(schema) + " NOT NULL"
+func getPostgresFieldQuery(key string, fieldType model.FieldType) string {
+	return key + " " + getPostgresDatatype(fieldType) + " NOT NULL"
 }
 
-func getPostgresDatatype(schema model.FieldSchema) string {
-	switch schema {
-	case model.FieldSchemaId:
+func getPostgresDatatype(fieldType model.FieldType) string {
+	switch fieldType {
+	case model.FieldTypeId:
 		return "uuid"
-	case model.FieldSchemaBoolean:
+	case model.FieldTypeBoolean:
 		return "boolean"
-	case model.FieldSchemaInteger:
+	case model.FieldTypeInteger:
 		return "integer"
-	case model.FieldSchemaString:
+	case model.FieldTypeString:
 		return "varchar"
-	case model.FieldSchemaTime:
+	case model.FieldTypeTime:
 		return "timestamp"
 	}
-	panic(fmt.Sprintf("invalid field schema has entered the system: %+v", schema))
+	panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldType))
 }

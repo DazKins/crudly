@@ -46,13 +46,13 @@ func (p postgresTableFetcher) FetchTableSchema(projectId model.ProjectId, name m
 			return util.ResultErr[model.TableSchema](fmt.Errorf("error scanning rows response: %w", err))
 		}
 
-		fieldSchemaResult := getFieldSchemaFromPostgresDataType(dataType)
+		fieldDefinitionResult := getFieldTypeFromPostgresDataType(dataType)
 
-		if fieldSchemaResult.IsErr() {
-			return util.ResultErr[model.TableSchema](fmt.Errorf("error getting field schema: %w", fieldSchemaResult.UnwrapErr()))
+		if fieldDefinitionResult.IsErr() {
+			return util.ResultErr[model.TableSchema](fmt.Errorf("error getting field definition: %w", fieldDefinitionResult.UnwrapErr()))
 		}
 
-		result[columnName] = fieldSchemaResult.Unwrap()
+		result[columnName] = fieldDefinitionResult.Unwrap()
 	}
 
 	if rowCount == 0 {
@@ -62,18 +62,25 @@ func (p postgresTableFetcher) FetchTableSchema(projectId model.ProjectId, name m
 	return util.ResultOk(result)
 }
 
-func getFieldSchemaFromPostgresDataType(dataType string) util.Result[model.FieldSchema] {
+func getFieldTypeFromPostgresDataType(dataType string) util.Result[model.FieldDefinition] {
+	var resultType model.FieldType
+
 	switch strings.ToLower(dataType) {
 	case "uuid":
-		return util.ResultOk(model.FieldSchemaId)
+		resultType = model.FieldTypeId
 	case "integer":
-		return util.ResultOk(model.FieldSchemaInteger)
+		resultType = model.FieldTypeInteger
 	case "boolean":
-		return util.ResultOk(model.FieldSchemaBoolean)
+		resultType = model.FieldTypeBoolean
 	case "character varying":
-		return util.ResultOk(model.FieldSchemaString)
+		resultType = model.FieldTypeString
 	case "timestamp without time zone":
-		return util.ResultOk(model.FieldSchemaTime)
+		resultType = model.FieldTypeTime
+	default:
+		return util.ResultErr[model.FieldDefinition](fmt.Errorf("unsupported postgres datatype: %s", dataType))
 	}
-	return util.ResultErr[model.FieldSchema](fmt.Errorf("unsupported postgres datatype: %s", dataType))
+
+	return util.ResultOk(model.FieldDefinition{
+		Type: resultType,
+	})
 }

@@ -28,11 +28,11 @@ func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.T
 
 const TimeFormat = "2006-01-02 15:04:05"
 
-func validateField(entity model.Entity, fieldName string, schema model.FieldSchema) error {
+func validateField(entity model.Entity, fieldName string, fieldDefinition model.FieldDefinition) error {
 	field := entity[fieldName]
 
-	switch schema {
-	case model.FieldSchemaId:
+	switch fieldDefinition.Type {
+	case model.FieldTypeId:
 		stringVal, ok := field.(string)
 
 		if !ok {
@@ -48,7 +48,7 @@ func validateField(entity model.Entity, fieldName string, schema model.FieldSche
 		entity[fieldName] = uuidVal
 
 		return nil
-	case model.FieldSchemaInteger:
+	case model.FieldTypeInteger:
 		floatVal, ok := field.(float64)
 
 		if !ok {
@@ -64,7 +64,7 @@ func validateField(entity model.Entity, fieldName string, schema model.FieldSche
 		entity[fieldName] = int(truncated)
 
 		return nil
-	case model.FieldSchemaBoolean:
+	case model.FieldTypeBoolean:
 		boolean, ok := field.(bool)
 
 		if !ok {
@@ -74,7 +74,7 @@ func validateField(entity model.Entity, fieldName string, schema model.FieldSche
 		entity[fieldName] = boolean
 
 		return nil
-	case model.FieldSchemaString:
+	case model.FieldTypeString:
 		_, ok := field.(string)
 
 		if !ok {
@@ -82,7 +82,7 @@ func validateField(entity model.Entity, fieldName string, schema model.FieldSche
 		}
 
 		return nil
-	case model.FieldSchemaTime:
+	case model.FieldTypeTime:
 		stringVal, ok := field.(string)
 
 		if !ok {
@@ -99,6 +99,6 @@ func validateField(entity model.Entity, fieldName string, schema model.FieldSche
 
 		return nil
 	default:
-		panic(fmt.Sprintf("invalid field schema has entered the system: %+v", schema))
+		panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldDefinition.Type))
 	}
 }

@@ -55,7 +55,9 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 		return errs.IdFieldAlreadyExistsError{}
 	}
 
-	schema["id"] = model.FieldSchemaId
+	schema["id"] = model.FieldDefinition{
+		Type: model.FieldTypeId,
+	}
 
 	return t.tableCreator.CreateTable(
 		projectId,

@@ -7,54 +7,78 @@ import (
 	"strings"
 )
 
-type FieldSchemaDto string
+type FieldTypeDto string
 
-func (e FieldSchemaDto) ToModel() util.Result[model.FieldSchema] {
-	switch strings.ToLower(string(e)) {
+func (t FieldTypeDto) ToModel() util.Result[model.FieldType] {
+	switch strings.ToLower(string(t)) {
 	case "id":
-		return util.ResultOk(model.FieldSchemaId)
+		return util.ResultOk(model.FieldTypeId)
 	case "integer":
-		return util.ResultOk(model.FieldSchemaInteger)
+		return util.ResultOk(model.FieldTypeInteger)
 	case "string":
-		return util.ResultOk(model.FieldSchemaString)
+		return util.ResultOk(model.FieldTypeString)
 	case "boolean":
-		return util.ResultOk(model.FieldSchemaBoolean)
+		return util.ResultOk(model.FieldTypeBoolean)
 	case "time":
-		return util.ResultOk(model.FieldSchemaTime)
+		return util.ResultOk(model.FieldTypeTime)
 	}
-	return util.ResultErr[model.FieldSchema](fmt.Errorf("unrecognised field schema: %s", string(e)))
+	return util.ResultErr[model.FieldType](fmt.Errorf("unrecognised field type: %s", string(t)))
 }
 
-func GetFieldSchemaDto(schema model.FieldSchema) FieldSchemaDto {
-	switch schema {
-	case model.FieldSchemaId:
-		return FieldSchemaDto("id")
-	case model.FieldSchemaBoolean:
-		return FieldSchemaDto("boolean")
-	case model.FieldSchemaInteger:
-		return FieldSchemaDto("integer")
-	case model.FieldSchemaString:
-		return FieldSchemaDto("string")
-	case model.FieldSchemaTime:
-		return FieldSchemaDto("time")
+func GetFieldTypeDto(fieldType model.FieldType) FieldTypeDto {
+	switch fieldType {
+	case model.FieldTypeId:
+		return FieldTypeDto("id")
+	case model.FieldTypeBoolean:
+		return FieldTypeDto("boolean")
+	case model.FieldTypeInteger:
+		return FieldTypeDto("integer")
+	case model.FieldTypeString:
+		return FieldTypeDto("string")
+	case model.FieldTypeTime:
+		return FieldTypeDto("time")
 	}
-	panic(fmt.Sprintf("invalid field schema has entered the system: %+v", schema))
+	panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldType))
 }
 
-type TableSchemaDto map[string]FieldSchemaDto
+type FieldDefinitionDto struct {
+	Type FieldTypeDto `json:"type"`
+}
+
+func (d FieldDefinitionDto) ToModel() util.Result[model.FieldDefinition] {
+	fieldTypeResult := d.Type.ToModel()
+
+	if fieldTypeResult.IsErr() {
+		util.ResultErr[model.FieldDefinition](fmt.Errorf("error parsing field type: %w", fieldTypeResult.UnwrapErr()))
+	}
+
+	fieldType := fieldTypeResult.Unwrap()
+
+	return util.ResultOk(model.FieldDefinition{
+		Type: fieldType,
+	})
+}
+
+func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
+	return FieldDefinitionDto{
+		Type: GetFieldTypeDto(d.Type),
+	}
+}
+
+type TableSchemaDto map[string]FieldDefinitionDto
 
 func (e TableSchemaDto) ToModel() util.Result[model.TableSchema] {
 	result := model.TableSchema{}
 
 	for k, v := range e {
-		fieldSchemaResult := v.ToModel()
+		fieldDefinitionResult := v.ToModel()
 
-		if fieldSchemaResult.IsErr() {
-			err := fieldSchemaResult.UnwrapErr()
-			return util.ResultErr[model.TableSchema](fmt.Errorf("error with field schema: %w", err))
+		if fieldDefinitionResult.IsErr() {
+			err := fieldDefinitionResult.UnwrapErr()
+			return util.ResultErr[model.TableSchema](fmt.Errorf("error with field definition: %w", err))
 		}
 
-		result[k] = fieldSchemaResult.Unwrap()
+		result[k] = fieldDefinitionResult.Unwrap()
 	}
 
 	return util.ResultOk(result)
@@ -64,9 +88,9 @@ func GetTableSchemaDto(schema model.TableSchema) TableSchemaDto {
 	result := TableSchemaDto{}
 
 	for k, v := range schema {
-		fieldSchemaDto := GetFieldSchemaDto(v)
+		fieldDefinitionDto := GetFieldDefinitionDto(v)
 
-		result[k] = fieldSchemaDto
+		result[k] = fieldDefinitionDto
 	}
 
 	return result

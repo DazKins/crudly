@@ -62,9 +62,9 @@ func (p postgresEntityFetcher) FetchEntity(
 		str := *(column.(*string))
 		columnType := *columnTypes[i]
 
-		fieldSchema := tableSchema[columnType.Name()]
+		fieldDefinition := tableSchema[columnType.Name()]
 
-		entity[columnType.Name()] = parsePostgresFieldString(str, fieldSchema)
+		entity[columnType.Name()] = parsePostgresFieldString(str, fieldDefinition.Type)
 	}
 
 	if err != nil {
@@ -112,9 +112,9 @@ func (p postgresEntityFetcher) FetchEntities(
 			str := *(column.(*string))
 			columnType := *columnTypes[i]
 
-			fieldSchema := tableSchema[columnType.Name()]
+			fieldDefinition := tableSchema[columnType.Name()]
 
-			entity[columnType.Name()] = parsePostgresFieldString(str, fieldSchema)
+			entity[columnType.Name()] = parsePostgresFieldString(str, fieldDefinition.Type)
 		}
 
 		if err != nil {
@@ -127,9 +127,9 @@ func (p postgresEntityFetcher) FetchEntities(
 	return util.ResultOk(entities)
 }
 
-func parsePostgresFieldString(str string, fieldSchema model.FieldSchema) any {
-	switch fieldSchema {
-	case model.FieldSchemaId:
+func parsePostgresFieldString(str string, fieldType model.FieldType) any {
+	switch fieldType {
+	case model.FieldTypeId:
 		uuid, err := uuid.Parse(str)
 
 		if err != nil {
@@ -137,7 +137,7 @@ func parsePostgresFieldString(str string, fieldSchema model.FieldSchema) any {
 		}
 
 		return uuid
-	case model.FieldSchemaInteger:
+	case model.FieldTypeInteger:
 		integer, err := strconv.Atoi(str)
 
 		if err != nil {
@@ -145,14 +145,14 @@ func parsePostgresFieldString(str string, fieldSchema model.FieldSchema) any {
 		}
 
 		return integer
-	case model.FieldSchemaBoolean:
+	case model.FieldTypeBoolean:
 		if strings.ToLower(str) == "false" {
 			return false
 		}
 		return true
-	case model.FieldSchemaString:
+	case model.FieldTypeString:
 		return str
-	case model.FieldSchemaTime:
+	case model.FieldTypeTime:
 		time, err := time.Parse(PostgresTimeFormat, str)
 
 		if err != nil {
