@@ -3,6 +3,7 @@ package app
 import (
 	"crudly/model"
 	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 	"math/rand"
 
@@ -14,7 +15,7 @@ type projectCreator interface {
 }
 
 type projectAuthInfoFetcher interface {
-	FetchProjectAuthInfo(id model.ProjectId) util.Result[model.ProjectAuthInfo]
+	FetchProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
 }
 
 type projectManager struct {
@@ -29,11 +30,11 @@ func NewProjectManager(projectCreator projectCreator, projectAuthInfoFetcher pro
 	}
 }
 
-func (p projectManager) GetProjectAuthInfo(id model.ProjectId) util.Result[model.ProjectAuthInfo] {
+func (p projectManager) GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo] {
 	return p.projectAuthInfoFetcher.FetchProjectAuthInfo(id)
 }
 
-func (p projectManager) CreateProject() util.Result[model.CreateProjectResponse] {
+func (p projectManager) CreateProject() result.Result[model.CreateProjectResponse] {
 	id := model.ProjectId(uuid.New())
 
 	key := generateKey()
@@ -46,10 +47,10 @@ func (p projectManager) CreateProject() util.Result[model.CreateProjectResponse]
 	})
 
 	if err != nil {
-		return util.ResultErr[model.CreateProjectResponse](fmt.Errorf("error creating project: %w", err))
+		return result.Err[model.CreateProjectResponse](fmt.Errorf("error creating project: %w", err))
 	}
 
-	return util.ResultOk(model.CreateProjectResponse{
+	return result.Ok(model.CreateProjectResponse{
 		Key: key,
 		Id:  id,
 	})

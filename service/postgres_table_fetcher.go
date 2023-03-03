@@ -3,7 +3,7 @@ package service
 import (
 	"crudly/errs"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -22,7 +22,7 @@ func NewPostgresTableFetcher(postgres *sql.DB) postgresTableFetcher {
 func (p postgresTableFetcher) FetchTableSchema(
 	projectId model.ProjectId,
 	name model.TableName,
-) util.Result[model.TableSchema] {
+) result.Result[model.TableSchema] {
 	query := "SELECT schema " +
 		"FROM \"" + getPostgresSchemaTableName(projectId) + "\" " +
 		"WHERE name = '" + name.String() + "'"
@@ -30,13 +30,13 @@ func (p postgresTableFetcher) FetchTableSchema(
 	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		return util.ResultErr[model.TableSchema](fmt.Errorf("error querying postgres: %w", err))
+		return result.Err[model.TableSchema](fmt.Errorf("error querying postgres: %w", err))
 	}
 
 	defer rows.Close()
 
 	if !rows.Next() {
-		return util.ResultErr[model.TableSchema](errs.TableNotFoundError{})
+		return result.Err[model.TableSchema](errs.TableNotFoundError{})
 	}
 
 	schemaBytes := []byte{}
@@ -51,5 +51,5 @@ func (p postgresTableFetcher) FetchTableSchema(
 		panic("error unmarshalling table schema")
 	}
 
-	return util.ResultOk(schema)
+	return result.Ok(schema)
 }

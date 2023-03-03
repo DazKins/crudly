@@ -1,7 +1,7 @@
 package config
 
 import (
-	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 	"os"
 	"strconv"
@@ -33,44 +33,44 @@ func InitialiseConfg() Config {
 	}
 }
 
-func getUint(env string) util.Result[uint] {
+func getUint(env string) result.Result[uint] {
 	numResult := getInt(env)
 
 	if numResult.IsErr() {
-		return util.ResultErr[uint](numResult.UnwrapErr())
+		return result.Err[uint](numResult.UnwrapErr())
 	}
 
 	num := numResult.Unwrap()
 
 	if num < 0 {
-		return util.ResultErr[uint](fmt.Errorf("env var: %d is less than zero", num))
+		return result.Err[uint](fmt.Errorf("env var: %d is less than zero", num))
 	}
 
-	return util.ResultOk(uint(num))
+	return result.Ok(uint(num))
 }
 
-func getInt(env string) util.Result[int] {
+func getInt(env string) result.Result[int] {
 	envResult := getEnv(env)
 
 	if envResult.IsErr() {
-		return util.ResultErr[int](envResult.UnwrapErr())
+		return result.Err[int](envResult.UnwrapErr())
 	}
 
 	num, err := strconv.Atoi(envResult.Unwrap())
 
 	if err != nil {
-		return util.ResultErr[int](fmt.Errorf("env var: %s is not a valid number", envResult.Unwrap()))
+		return result.Err[int](fmt.Errorf("env var: %s is not a valid number", envResult.Unwrap()))
 	}
 
-	return util.ResultOk(num)
+	return result.Ok(num)
 }
 
-func getEnv(env string) util.Result[string] {
+func getEnv(env string) result.Result[string] {
 	envVar, present := os.LookupEnv(env)
 
 	if !present {
-		return util.ResultErr[string](fmt.Errorf("env var: %s not present", env))
+		return result.Err[string](fmt.Errorf("env var: %s not present", env))
 	}
 
-	return util.ResultOk(envVar)
+	return result.Ok(envVar)
 }

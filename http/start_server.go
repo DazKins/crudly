@@ -5,7 +5,7 @@ import (
 	"crudly/http/handler"
 	"crudly/http/middleware"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,18 +14,18 @@ import (
 )
 
 type projectManager interface {
-	CreateProject() util.Result[model.CreateProjectResponse]
-	GetProjectAuthInfo(id model.ProjectId) util.Result[model.ProjectAuthInfo]
+	CreateProject() result.Result[model.CreateProjectResponse]
+	GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
 }
 
 type tableManager interface {
 	CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error
-	GetTableSchema(projectId model.ProjectId, name model.TableName) util.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
 }
 
 type entityManager interface {
-	GetEntity(projectId model.ProjectId, tableName model.TableName, id model.EntityId) util.Result[model.Entity]
-	GetEntities(projectId model.ProjectId, tableName model.TableName, paginationParams model.PaginationParams) util.Result[model.Entities]
+	GetEntity(projectId model.ProjectId, tableName model.TableName, id model.EntityId) result.Result[model.Entity]
+	GetEntities(projectId model.ProjectId, tableName model.TableName, paginationParams model.PaginationParams) result.Result[model.Entities]
 	CreateEntityWithId(
 		projectId model.ProjectId,
 		tableName model.TableName,

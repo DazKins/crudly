@@ -1,10 +1,11 @@
 package handler
 
 import (
+	"crudly/ctx"
 	"crudly/http/dto"
 	"crudly/http/middleware"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,13 +18,13 @@ type entityGetter interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		id model.EntityId,
-	) util.Result[model.Entity]
+	) result.Result[model.Entity]
 
 	GetEntities(
 		projectId model.ProjectId,
 		tableName model.TableName,
 		paginationParams model.PaginationParams,
-	) util.Result[model.Entities]
+	) result.Result[model.Entities]
 }
 
 type entityCreator interface {
@@ -54,7 +55,7 @@ func NewEntityHandler(entityGetter entityGetter, entityCreator entityCreator) en
 }
 
 func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 
@@ -101,7 +102,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 
@@ -172,7 +173,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 
@@ -232,7 +233,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 

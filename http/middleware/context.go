@@ -1,5 +1,5 @@
 package middleware
 
-import "crudly/util"
+import "crudly/ctx"
 
-const ErrorContextKey = util.ContextKey("error")
+const ErrorContextKey = ctx.ContextKey("error")

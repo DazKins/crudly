@@ -3,7 +3,7 @@ package service
 import (
 	"crudly/errs"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"database/sql"
 	"fmt"
 	"strconv"
@@ -28,7 +28,7 @@ func (p postgresEntityFetcher) FetchEntity(
 	tableName model.TableName,
 	tableSchema model.TableSchema,
 	id model.EntityId,
-) util.Result[model.Entity] {
+) result.Result[model.Entity] {
 	query := getPostgresEntityQuery(
 		projectId,
 		tableName,
@@ -38,13 +38,13 @@ func (p postgresEntityFetcher) FetchEntity(
 	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		return util.ResultErr[model.Entity](fmt.Errorf("error querying postgres: %w", err))
+		return result.Err[model.Entity](fmt.Errorf("error querying postgres: %w", err))
 	}
 
 	defer rows.Close()
 
 	if !rows.Next() {
-		return util.ResultErr[model.Entity](errs.EntityNotFoundError{})
+		return result.Err[model.Entity](errs.EntityNotFoundError{})
 	}
 
 	entity := model.Entity{}
@@ -68,10 +68,10 @@ func (p postgresEntityFetcher) FetchEntity(
 	}
 
 	if err != nil {
-		return util.ResultErr[model.Entity](fmt.Errorf("error scaning postgres rows: %w", err))
+		return result.Err[model.Entity](fmt.Errorf("error scaning postgres rows: %w", err))
 	}
 
-	return util.ResultOk(entity)
+	return result.Ok(entity)
 }
 
 func (p postgresEntityFetcher) FetchEntities(
@@ -79,7 +79,7 @@ func (p postgresEntityFetcher) FetchEntities(
 	tableName model.TableName,
 	tableSchema model.TableSchema,
 	paginationParams model.PaginationParams,
-) util.Result[model.Entities] {
+) result.Result[model.Entities] {
 	query := getPostgresEntitiesQuery(
 		projectId,
 		tableName,
@@ -89,7 +89,7 @@ func (p postgresEntityFetcher) FetchEntities(
 	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		return util.ResultErr[model.Entities](fmt.Errorf("error querying postgres: %w", err))
+		return result.Err[model.Entities](fmt.Errorf("error querying postgres: %w", err))
 	}
 
 	defer rows.Close()
@@ -118,13 +118,13 @@ func (p postgresEntityFetcher) FetchEntities(
 		}
 
 		if err != nil {
-			return util.ResultErr[model.Entities](fmt.Errorf("error scaning postgres rows: %w", err))
+			return result.Err[model.Entities](fmt.Errorf("error scaning postgres rows: %w", err))
 		}
 
 		entities = append(entities, entity)
 	}
 
-	return util.ResultOk(entities)
+	return result.Ok(entities)
 }
 
 func parsePostgresFieldString(str string, fieldType model.FieldType) any {

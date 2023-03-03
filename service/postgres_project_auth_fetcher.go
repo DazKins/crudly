@@ -3,7 +3,7 @@ package service
 import (
 	"crudly/errs"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"database/sql"
 	"fmt"
 )
@@ -18,17 +18,17 @@ func NewPostgresProjectAuthFetcher(postgres *sql.DB) postgresProjectAuthFetcher 
 	}
 }
 
-func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) util.Result[model.ProjectAuthInfo] {
+func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo] {
 	query := getPostgresFetchProjectAuthQuery(id)
 
 	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		return util.ResultErr[model.ProjectAuthInfo](fmt.Errorf("error querying postgres: %w", err))
+		return result.Err[model.ProjectAuthInfo](fmt.Errorf("error querying postgres: %w", err))
 	}
 
 	if !rows.Next() {
-		return util.ResultErr[model.ProjectAuthInfo](errs.ProjectNotFoundError{})
+		return result.Err[model.ProjectAuthInfo](errs.ProjectNotFoundError{})
 	}
 
 	salt := ""
@@ -36,7 +36,7 @@ func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) uti
 
 	rows.Scan(&salt, &saltedHash)
 
-	return util.ResultOk(model.ProjectAuthInfo{
+	return result.Ok(model.ProjectAuthInfo{
 		Salt:       salt,
 		SaltedHash: saltedHash,
 	})

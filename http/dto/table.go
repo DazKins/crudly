@@ -2,27 +2,27 @@ package dto
 
 import (
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 	"strings"
 )
 
 type FieldTypeDto string
 
-func (t FieldTypeDto) ToModel() util.Result[model.FieldType] {
+func (t FieldTypeDto) ToModel() result.Result[model.FieldType] {
 	switch strings.ToLower(string(t)) {
 	case "id":
-		return util.ResultOk(model.FieldTypeId)
+		return result.Ok(model.FieldTypeId)
 	case "integer":
-		return util.ResultOk(model.FieldTypeInteger)
+		return result.Ok(model.FieldTypeInteger)
 	case "string":
-		return util.ResultOk(model.FieldTypeString)
+		return result.Ok(model.FieldTypeString)
 	case "boolean":
-		return util.ResultOk(model.FieldTypeBoolean)
+		return result.Ok(model.FieldTypeBoolean)
 	case "time":
-		return util.ResultOk(model.FieldTypeTime)
+		return result.Ok(model.FieldTypeTime)
 	}
-	return util.ResultErr[model.FieldType](fmt.Errorf("unrecognised field type: %s", string(t)))
+	return result.Err[model.FieldType](fmt.Errorf("unrecognised field type: %s", string(t)))
 }
 
 func GetFieldTypeDto(fieldType model.FieldType) FieldTypeDto {
@@ -45,16 +45,16 @@ type FieldDefinitionDto struct {
 	Type FieldTypeDto `json:"type"`
 }
 
-func (d FieldDefinitionDto) ToModel() util.Result[model.FieldDefinition] {
+func (d FieldDefinitionDto) ToModel() result.Result[model.FieldDefinition] {
 	fieldTypeResult := d.Type.ToModel()
 
 	if fieldTypeResult.IsErr() {
-		util.ResultErr[model.FieldDefinition](fmt.Errorf("error parsing field type: %w", fieldTypeResult.UnwrapErr()))
+		result.Err[model.FieldDefinition](fmt.Errorf("error parsing field type: %w", fieldTypeResult.UnwrapErr()))
 	}
 
 	fieldType := fieldTypeResult.Unwrap()
 
-	return util.ResultOk(model.FieldDefinition{
+	return result.Ok(model.FieldDefinition{
 		Type: fieldType,
 	})
 }
@@ -67,21 +67,21 @@ func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 
 type TableSchemaDto map[string]FieldDefinitionDto
 
-func (e TableSchemaDto) ToModel() util.Result[model.TableSchema] {
-	result := model.TableSchema{}
+func (e TableSchemaDto) ToModel() result.Result[model.TableSchema] {
+	res := model.TableSchema{}
 
 	for k, v := range e {
 		fieldDefinitionResult := v.ToModel()
 
 		if fieldDefinitionResult.IsErr() {
 			err := fieldDefinitionResult.UnwrapErr()
-			return util.ResultErr[model.TableSchema](fmt.Errorf("error with field definition: %w", err))
+			return result.Err[model.TableSchema](fmt.Errorf("error with field definition: %w", err))
 		}
 
-		result[k] = fieldDefinitionResult.Unwrap()
+		res[k] = fieldDefinitionResult.Unwrap()
 	}
 
-	return util.ResultOk(result)
+	return result.Ok(res)
 }
 
 func GetTableSchemaDto(schema model.TableSchema) TableSchemaDto {
@@ -98,7 +98,7 @@ func GetTableSchemaDto(schema model.TableSchema) TableSchemaDto {
 
 type TableNameDto string
 
-func (t TableNameDto) ToModel() util.Result[model.TableName] {
+func (t TableNameDto) ToModel() result.Result[model.TableName] {
 	tableName := model.TableName(string(t))
-	return util.ResultOk(tableName)
+	return result.Ok(tableName)
 }

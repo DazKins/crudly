@@ -5,13 +5,13 @@ import (
 	"crudly/http/dto"
 	"crudly/http/middleware"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"encoding/json"
 	"net/http"
 )
 
 type projectCreator interface {
-	CreateProject() util.Result[model.CreateProjectResponse]
+	CreateProject() result.Result[model.CreateProjectResponse]
 }
 
 type adminProjectHandler struct {

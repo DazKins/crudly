@@ -3,6 +3,7 @@ package service
 import (
 	"crudly/model"
 	"crudly/util"
+	"crudly/util/result"
 	"database/sql"
 	"fmt"
 	"time"
@@ -74,21 +75,21 @@ func getPostgresCreateEntityQuery(
 
 const PostgresTimeFormat = "2006-01-02T15:04:05Z"
 
-func getPostgresFieldValue(field any) util.Result[string] {
+func getPostgresFieldValue(field any) result.Result[string] {
 	switch v := field.(type) {
 	case uuid.UUID:
-		return util.ResultOk("'" + v.String() + "'")
+		return result.Ok("'" + v.String() + "'")
 	case int:
-		return util.ResultOk(fmt.Sprintf("'%d'", v))
+		return result.Ok(fmt.Sprintf("'%d'", v))
 	case string:
-		return util.ResultOk("'" + v + "'")
+		return result.Ok("'" + v + "'")
 	case bool:
 		if v {
-			return util.ResultOk("'true'")
+			return result.Ok("'true'")
 		}
-		return util.ResultOk("'false'")
+		return result.Ok("'false'")
 	case time.Time:
-		return util.ResultOk("'" + v.Format(PostgresTimeFormat) + "'")
+		return result.Ok("'" + v.Format(PostgresTimeFormat) + "'")
 	}
-	return util.ResultErr[string](fmt.Errorf("field: %+v has unsupported type", field))
+	return result.Err[string](fmt.Errorf("field: %+v has unsupported type", field))
 }

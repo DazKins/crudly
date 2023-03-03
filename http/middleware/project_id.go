@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
+	"crudly/ctx"
 	"crudly/http/dto"
-	"crudly/util"
 	"net/http"
 )
 
@@ -25,7 +25,7 @@ func (projectId) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w h
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), util.ProjectIdContextKey, projectIdResult.Unwrap())
+		ctx := context.WithValue(r.Context(), ctx.ProjectIdContextKey, projectIdResult.Unwrap())
 
 		h(w, r.WithContext(ctx))
 	}

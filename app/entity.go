@@ -2,7 +2,7 @@ package app
 
 import (
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -14,14 +14,14 @@ type entityFetcher interface {
 		tableName model.TableName,
 		tableSchema model.TableSchema,
 		id model.EntityId,
-	) util.Result[model.Entity]
+	) result.Result[model.Entity]
 
 	FetchEntities(
 		projectId model.ProjectId,
 		table model.TableName,
 		tableSchema model.TableSchema,
 		paginationParams model.PaginationParams,
-	) util.Result[model.Entities]
+	) result.Result[model.Entities]
 }
 
 type entityCreator interface {
@@ -34,7 +34,7 @@ type entityCreator interface {
 }
 
 type tableSchemaGetter interface {
-	GetTableSchema(projectId model.ProjectId, name model.TableName) util.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
 }
 
 type entityValidator interface {
@@ -66,11 +66,11 @@ func (e entityManager) GetEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
-) util.Result[model.Entity] {
+) result.Result[model.Entity] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
-		return util.ResultErr[model.Entity](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
+		return result.Err[model.Entity](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 
 	return e.entityFetcher.FetchEntity(
@@ -85,11 +85,11 @@ func (e entityManager) GetEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	paginationParams model.PaginationParams,
-) util.Result[model.Entities] {
+) result.Result[model.Entities] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
-		return util.ResultErr[model.Entities](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
+		return result.Err[model.Entities](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 
 	return e.entityFetcher.FetchEntities(

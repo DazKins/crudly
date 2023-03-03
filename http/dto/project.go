@@ -2,7 +2,7 @@ package dto
 
 import (
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -14,14 +14,14 @@ func GetProjectIdDto(projectId model.ProjectId) ProjectIdDto {
 	return ProjectIdDto(uuid.UUID(projectId).String())
 }
 
-func (p ProjectIdDto) ToModel() util.Result[model.ProjectId] {
+func (p ProjectIdDto) ToModel() result.Result[model.ProjectId] {
 	uuid, err := uuid.Parse(string(p))
 
 	if err != nil {
-		return util.ResultErr[model.ProjectId](fmt.Errorf("invalid uuid: %w", err))
+		return result.Err[model.ProjectId](fmt.Errorf("invalid uuid: %w", err))
 	}
 
-	return util.ResultOk(model.ProjectId(uuid))
+	return result.Ok(model.ProjectId(uuid))
 }
 
 type ProjectKeyDto string

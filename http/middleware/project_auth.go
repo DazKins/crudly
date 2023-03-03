@@ -1,13 +1,15 @@
 package middleware
 
 import (
+	"crudly/ctx"
 	"crudly/model"
 	"crudly/util"
+	"crudly/util/result"
 	"net/http"
 )
 
 type projectAuthInfoGetter interface {
-	GetProjectAuthInfo(id model.ProjectId) util.Result[model.ProjectAuthInfo]
+	GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
 }
 
 type projectAuth struct {
@@ -22,7 +24,7 @@ func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) projectAuth {
 
 func (p projectAuth) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := r.Context().Value(util.ProjectIdContextKey).(model.ProjectId)
+		projectId := r.Context().Value(ctx.ProjectIdContextKey).(model.ProjectId)
 
 		authInfoResult := p.projectAuthInfoGetter.GetProjectAuthInfo(projectId)
 

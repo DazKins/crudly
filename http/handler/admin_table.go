@@ -6,11 +6,12 @@ import (
 	"io"
 	"net/http"
 
+	"crudly/ctx"
 	"crudly/errs"
 	"crudly/http/dto"
 	"crudly/http/middleware"
 	"crudly/model"
-	"crudly/util"
+	"crudly/util/result"
 
 	"github.com/gorilla/mux"
 )
@@ -24,7 +25,7 @@ type tableCreator interface {
 }
 
 type tableSchemaGetter interface {
-	GetTableSchema(projectId model.ProjectId, name model.TableName) util.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
 }
 
 type adminTableHandler struct {
@@ -40,7 +41,7 @@ func NewAdminTableHandler(tableCreator tableCreator, tableSchemaGetter tableSche
 }
 
 func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 
@@ -88,7 +89,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
-	projectId := util.GetRequestProjectId(r)
+	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
 

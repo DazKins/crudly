@@ -1,18 +1,18 @@
-package util
+package result
 
 type Result[T any] struct {
 	value T
 	err   error
 }
 
-func ResultOk[T any](value T) Result[T] {
+func Ok[T any](value T) Result[T] {
 	return Result[T]{
 		value: value,
 		err:   nil,
 	}
 }
 
-func ResultErr[T any](err error) Result[T] {
+func Err[T any](err error) Result[T] {
 	return Result[T]{
 		err: err,
 	}
