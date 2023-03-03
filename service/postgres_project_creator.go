@@ -20,15 +20,27 @@ func (p postgresProjectCreator) CreateProject(
 	id model.ProjectId,
 	authInfo model.ProjectAuthInfo,
 ) error {
-	query := getPostgresProjectCreationQuery(id, authInfo.Salt, authInfo.SaltedHash)
+	projectCreationQuery := getPostgresProjectCreationQuery(id, authInfo.Salt, authInfo.SaltedHash)
 
-	_, err := p.postgres.Query(query)
+	_, err := p.postgres.Query(projectCreationQuery)
+
+	if err != nil {
+		return fmt.Errorf("error executing postgres query: %w", err)
+	}
+
+	schemaTableCreationQuery := getPostgresSchemaTableCreationQuery(id)
+
+	_, err = p.postgres.Query(schemaTableCreationQuery)
 
 	if err != nil {
 		return fmt.Errorf("error executing postgres query: %w", err)
 	}
 
 	return nil
+}
+
+func getPostgresSchemaTableCreationQuery(id model.ProjectId) string {
+	return "CREATE TABLE \"" + getPostgresSchemaTableName(id) + "\"(name varchar, schema varchar)"
 }
 
 func getPostgresProjectCreationQuery(id model.ProjectId, salt string, saltedHash string) string {

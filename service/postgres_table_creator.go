@@ -3,6 +3,7 @@ package service
 import (
 	"crudly/model"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -22,23 +23,62 @@ func (p postgresTableCreator) CreateTable(
 	name model.TableName,
 	schema model.TableSchema,
 ) error {
-	query := getPostgresTableCreationQuery(
+	tableCreationQuery := getPostgresTableCreationQuery(
 		projectId,
 		name,
 		schema,
 	)
 
-	res, err := p.postgres.Exec(query)
-
-	if res == nil {
-		return fmt.Errorf("table %s already exists", name)
-	}
+	res, err := p.postgres.Exec(tableCreationQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating postgres table: %w", err)
 	}
 
+	if res == nil {
+		return fmt.Errorf("table %s already exists", name)
+	}
+
+	schemaCreationQuery := getPostgresTableSchemaCreationQuery(
+		projectId,
+		name,
+		schema,
+	)
+
+	res, err = p.postgres.Exec(schemaCreationQuery)
+
+	if err != nil {
+		return fmt.Errorf("error creating postgres table: %w", err)
+	}
+
+	if res == nil {
+		return fmt.Errorf("table %s already exists", name)
+	}
+
 	return nil
+}
+
+func getPostgresTableSchemaCreationQuery(
+	projectId model.ProjectId,
+	name model.TableName,
+	schema model.TableSchema,
+) string {
+	return fmt.Sprintf(
+		"INSERT INTO \"%s\"(%s, %s) VALUES ('%s', '%s')",
+		getPostgresSchemaTableName(projectId),
+		"name", "schema",
+		name, getSchemaJson(schema),
+	)
+}
+
+func getSchemaJson(schema model.TableSchema) string {
+	json, err := json.Marshal(schema)
+
+	if err != nil {
+		panic("error marshalling table schema json")
+	}
+
+	return string(json)
 }
 
 func getPostgresTableCreationQuery(
