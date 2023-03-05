@@ -33,6 +33,14 @@ type entityCreator interface {
 	) error
 }
 
+type entityDeleter interface {
+	DeleteEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+	) error
+}
+
 type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
 }
@@ -44,6 +52,7 @@ type entityValidator interface {
 type entityManager struct {
 	entityFetcher     entityFetcher
 	entityCreator     entityCreator
+	entityDeleter     entityDeleter
 	tableSchemaGetter tableSchemaGetter
 	entityValidator   entityValidator
 }
@@ -51,12 +60,14 @@ type entityManager struct {
 func NewEntityManager(
 	entityFetcher entityFetcher,
 	entityCreator entityCreator,
+	entityDeleter entityDeleter,
 	tableSchemaGetter tableSchemaGetter,
 	entityValidator entityValidator,
 ) entityManager {
 	return entityManager{
 		entityFetcher,
 		entityCreator,
+		entityDeleter,
 		tableSchemaGetter,
 		entityValidator,
 	}
@@ -140,5 +151,17 @@ func (e entityManager) CreateEntity(
 		tableName,
 		id,
 		entity,
+	)
+}
+
+func (e entityManager) DeleteEntity(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	id model.EntityId,
+) error {
+	return e.entityDeleter.DeleteEntity(
+		projectId,
+		tableName,
+		id,
 	)
 }

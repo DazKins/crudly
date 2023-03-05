@@ -42,15 +42,29 @@ type entityCreator interface {
 	) error
 }
 
+type entityDeleter interface {
+	DeleteEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+	) error
+}
+
 type entityHandler struct {
 	entityGetter  entityGetter
 	entityCreator entityCreator
+	entityDeleter entityDeleter
 }
 
-func NewEntityHandler(entityGetter entityGetter, entityCreator entityCreator) entityHandler {
+func NewEntityHandler(
+	entityGetter entityGetter,
+	entityCreator entityCreator,
+	entityDeleter entityDeleter,
+) entityHandler {
 	return entityHandler{
 		entityGetter,
 		entityCreator,
+		entityDeleter,
 	}
 }
 
@@ -276,6 +290,47 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 		middleware.AttachError(w, err)
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error creating entity"))
+		return
+	}
+}
+
+func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+
+	vars := mux.Vars(r)
+
+	tableNameDto := dto.TableNameDto(vars["tableName"])
+
+	tableNameResult := tableNameDto.ToModel()
+
+	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
+		return
+	}
+
+	entityIdDto := dto.EntityIdDto(vars["id"])
+
+	entityIdResult := entityIdDto.ToModel()
+
+	if entityIdResult.IsErr() {
+		middleware.AttachError(w, entityIdResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid entity id"))
+		return
+	}
+
+	err := e.entityDeleter.DeleteEntity(
+		projectId,
+		tableNameResult.Unwrap(),
+		entityIdResult.Unwrap(),
+	)
+
+	if err != nil {
+		middleware.AttachError(w, err)
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error deleting entity"))
 		return
 	}
 }

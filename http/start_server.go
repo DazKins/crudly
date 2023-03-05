@@ -37,6 +37,11 @@ type entityManager interface {
 		tableName model.TableName,
 		entity model.Entity,
 	) error
+	DeleteEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+	) error
 }
 
 func createHandler(
@@ -50,7 +55,11 @@ func createHandler(
 		tableManager,
 		tableManager,
 	)
-	entityHandler := handler.NewEntityHandler(entityManager, entityManager)
+	entityHandler := handler.NewEntityHandler(
+		entityManager,
+		entityManager,
+		entityManager,
+	)
 
 	router := mux.NewRouter()
 
@@ -90,6 +99,14 @@ func createHandler(
 			projectAuthMiddlewares,
 		),
 	).Methods("GET")
+
+	router.HandleFunc(
+		"/{tableName}/{id}",
+		middleware.AttachMultiple(
+			entityHandler.DeleteEntity,
+			projectAuthMiddlewares,
+		),
+	).Methods("DELETE")
 
 	router.HandleFunc(
 		"/{tableName}",
