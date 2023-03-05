@@ -6,48 +6,42 @@ import (
 	"crudly/util"
 	"crudly/util/result"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type projectAuthInfoGetter interface {
 	GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
 }
 
-type projectAuth struct {
-	projectAuthInfoGetter projectAuthInfoGetter
-}
+func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) mux.MiddlewareFunc {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			projectId := r.Context().Value(ctx.ProjectIdContextKey).(model.ProjectId)
 
-func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) projectAuth {
-	return projectAuth{
-		projectAuthInfoGetter,
-	}
-}
+			authInfoResult := projectAuthInfoGetter.GetProjectAuthInfo(projectId)
 
-func (p projectAuth) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := r.Context().Value(ctx.ProjectIdContextKey).(model.ProjectId)
+			if authInfoResult.IsErr() {
+				AttachError(w, authInfoResult.UnwrapErr())
+				w.WriteHeader(500)
+				w.Write([]byte("unexpected error getting project auth details"))
+				return
+			}
 
-		authInfoResult := p.projectAuthInfoGetter.GetProjectAuthInfo(projectId)
+			authInfo := authInfoResult.Unwrap()
 
-		if authInfoResult.IsErr() {
-			AttachError(w, authInfoResult.UnwrapErr())
-			w.WriteHeader(500)
-			w.Write([]byte("unexpected error getting project auth details"))
-			return
-		}
+			projectKey := r.Header.Get("x-project-key")
+			saltedProjectKey := projectKey + authInfo.Salt
 
-		authInfo := authInfoResult.Unwrap()
+			hash := util.StringHash(saltedProjectKey)
 
-		projectKey := r.Header.Get("x-project-key")
-		saltedProjectKey := projectKey + authInfo.Salt
+			if hash != authInfo.SaltedHash {
+				w.WriteHeader(401)
+				w.Write([]byte("unauthorized to access project"))
+				return
+			}
 
-		hash := util.StringHash(saltedProjectKey)
-
-		if hash != authInfo.SaltedHash {
-			w.WriteHeader(401)
-			w.Write([]byte("unauthorized to access project"))
-			return
-		}
-
-		h(w, r)
+			h.ServeHTTP(w, r)
+		})
 	}
 }

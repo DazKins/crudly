@@ -71,19 +71,9 @@ func NewEntityHandler(
 
 func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
 
 	vars := mux.Vars(r)
-
-	tableNameDto := dto.TableNameDto(vars["tableName"])
-
-	tableNameResult := tableNameDto.ToModel()
-
-	if tableNameResult.IsErr() {
-		middleware.AttachError(w, tableNameResult.UnwrapErr())
-		w.WriteHeader(400)
-		w.Write([]byte("invalid table name"))
-		return
-	}
 
 	entityIdDto := dto.EntityIdDto(vars["id"])
 
@@ -98,7 +88,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 
 	entityResult := e.entityGetter.GetEntity(
 		projectId,
-		tableNameResult.Unwrap(),
+		tableName,
 		entityIdResult.Unwrap(),
 	)
 
@@ -118,19 +108,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 
 func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
-
-	vars := mux.Vars(r)
-
-	tableNameDto := dto.TableNameDto(vars["tableName"])
-
-	tableNameResult := tableNameDto.ToModel()
-
-	if tableNameResult.IsErr() {
-		middleware.AttachError(w, tableNameResult.UnwrapErr())
-		w.WriteHeader(400)
-		w.Write([]byte("invalid table name"))
-		return
-	}
+	tableName := ctx.GetRequestTableName(r)
 
 	paginationParams := model.PaginationParams{
 		Limit:  model.DefaultPaginationLimit,
@@ -169,7 +147,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 
 	entitiesResult := e.entityGetter.GetEntities(
 		projectId,
-		tableNameResult.Unwrap(),
+		tableName,
 		paginationParams,
 	)
 
@@ -192,19 +170,9 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 
 func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
 
 	vars := mux.Vars(r)
-
-	tableNameDto := dto.TableNameDto(vars["tableName"])
-
-	tableNameResult := tableNameDto.ToModel()
-
-	if tableNameResult.IsErr() {
-		middleware.AttachError(w, tableNameResult.UnwrapErr())
-		w.WriteHeader(400)
-		w.Write([]byte("invalid table name"))
-		return
-	}
 
 	entityIdDto := dto.EntityIdDto(vars["id"])
 
@@ -237,7 +205,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 
 	err = e.entityCreator.CreateEntityWithId(
 		projectId,
-		tableNameResult.Unwrap(),
+		tableName,
 		entityIdResult.Unwrap(),
 		entityResult.Unwrap(),
 	)
@@ -259,19 +227,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 
 func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
-
-	vars := mux.Vars(r)
-
-	tableNameDto := dto.TableNameDto(vars["tableName"])
-
-	tableNameResult := tableNameDto.ToModel()
-
-	if tableNameResult.IsErr() {
-		middleware.AttachError(w, tableNameResult.UnwrapErr())
-		w.WriteHeader(400)
-		w.Write([]byte("invalid table name"))
-		return
-	}
+	tableName := ctx.GetRequestTableName(r)
 
 	bodyBytes, err := io.ReadAll(r.Body)
 
@@ -293,7 +249,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 
 	err = e.entityCreator.CreateEntity(
 		projectId,
-		tableNameResult.Unwrap(),
+		tableName,
 		entityResult.Unwrap(),
 	)
 
@@ -314,19 +270,9 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 
 func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
 
 	vars := mux.Vars(r)
-
-	tableNameDto := dto.TableNameDto(vars["tableName"])
-
-	tableNameResult := tableNameDto.ToModel()
-
-	if tableNameResult.IsErr() {
-		middleware.AttachError(w, tableNameResult.UnwrapErr())
-		w.WriteHeader(400)
-		w.Write([]byte("invalid table name"))
-		return
-	}
 
 	entityIdDto := dto.EntityIdDto(vars["id"])
 
@@ -341,7 +287,7 @@ func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 
 	err := e.entityDeleter.DeleteEntity(
 		projectId,
-		tableNameResult.Unwrap(),
+		tableName,
 		entityIdResult.Unwrap(),
 	)
 

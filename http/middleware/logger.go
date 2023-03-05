@@ -5,17 +5,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
-
-type logger struct {
-	writer io.Writer
-}
-
-func NewLogger(writer io.Writer) logger {
-	return logger{
-		writer,
-	}
-}
 
 type loggerDetails struct {
 	status int
@@ -55,29 +47,31 @@ func (w wrappedWriter) Write(b []byte) (int, error) {
 	return w.writer.Write(b)
 }
 
-func (p logger) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ww := wrapWriter(w)
+func NewLogger(writer io.Writer) mux.MiddlewareFunc {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ww := wrapWriter(w)
 
-		h(ww, r)
+			h.ServeHTTP(ww, r)
 
-		body := strings.TrimSuffix(string(ww.loggerDetails.body), "\n")
+			body := strings.TrimSuffix(string(ww.loggerDetails.body), "\n")
 
-		log := fmt.Sprintf(
-			"[%s %s] %d\nResponse Body: %s\n",
-			r.Method,
-			r.URL,
-			ww.loggerDetails.status,
-			body,
-		)
+			log := fmt.Sprintf(
+				"[%s %s] %d\nResponse Body: %s\n",
+				r.Method,
+				r.URL,
+				ww.loggerDetails.status,
+				body,
+			)
 
-		if ww.loggerDetails.err != nil {
-			log += fmt.Sprintf("Error: %s\n", ww.loggerDetails.err)
-		}
+			if ww.loggerDetails.err != nil {
+				log += fmt.Sprintf("Error: %s\n", ww.loggerDetails.err)
+			}
 
-		log += "\n"
+			log += "\n"
 
-		p.writer.Write([]byte(log))
+			writer.Write([]byte(log))
+		})
 	}
 }
 

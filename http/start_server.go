@@ -61,83 +61,64 @@ func createHandler(
 		entityManager,
 	)
 
-	router := mux.NewRouter()
-
-	adminRouter := router.PathPrefix("/admin").Subrouter()
-
-	adminRouter.HandleFunc("/project", adminProjectHandler.PostProject).Methods("POST")
-
+	tableNameMiddleware := middleware.NewTableName()
 	projectIdMiddleware := middleware.NewProjectId()
 	projectAuthMiddleware := middleware.NewProjectAuth(projectManager)
 	loggerMiddleware := middleware.NewLogger(os.Stdout)
 
-	projectAuthMiddlewares := middleware.Middlewares{
-		projectIdMiddleware,
-		projectAuthMiddleware,
-	}
-
-	adminRouter.HandleFunc(
-		"/table/{tableName}",
-		middleware.AttachMultiple(
-			adminTableHandler.PutTable,
-			projectAuthMiddlewares,
-		),
-	).Methods("PUT")
-
-	adminRouter.HandleFunc(
-		"/table/{tableName}",
-		middleware.AttachMultiple(
-			adminTableHandler.GetTable,
-			projectAuthMiddlewares,
-		),
-	).Methods("GET")
+	router := mux.NewRouter()
+	router.Use(loggerMiddleware)
 
 	router.HandleFunc(
-		"/{tableName}/{id}",
-		middleware.AttachMultiple(
-			entityHandler.GetEntity,
-			projectAuthMiddlewares,
-		),
-	).Methods("GET")
-
-	router.HandleFunc(
-		"/{tableName}/{id}",
-		middleware.AttachMultiple(
-			entityHandler.DeleteEntity,
-			projectAuthMiddlewares,
-		),
-	).Methods("DELETE")
-
-	router.HandleFunc(
-		"/{tableName}",
-		middleware.AttachMultiple(
-			entityHandler.GetEntities,
-			projectAuthMiddlewares,
-		),
-	).Methods("GET")
-
-	router.HandleFunc(
-		"/{tableName}/{id}",
-		middleware.AttachMultiple(
-			entityHandler.PutEntity,
-			projectAuthMiddlewares,
-		),
-	).Methods("PUT")
-
-	router.HandleFunc(
-		"/{tableName}",
-		middleware.AttachMultiple(
-			entityHandler.PostEntity,
-			projectAuthMiddlewares,
-		),
+		"/project",
+		adminProjectHandler.PostProject,
 	).Methods("POST")
 
-	loggedHandler := middleware.AttachToHandler(
-		router,
-		loggerMiddleware,
-	)
+	adminRouter := router.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(projectIdMiddleware)
+	adminRouter.Use(projectAuthMiddleware)
 
-	return loggedHandler
+	adminRouter.HandleFunc(
+		"/table/{tableName}",
+		adminTableHandler.PutTable,
+	).Methods("PUT")
+
+	adminRouter.HandleFunc(
+		"/table/{tableName}",
+		adminTableHandler.GetTable,
+	).Methods("GET")
+
+	userRouter := router.PathPrefix("/{tableName}").Subrouter()
+	userRouter.Use(projectIdMiddleware)
+	userRouter.Use(projectAuthMiddleware)
+	userRouter.Use(tableNameMiddleware)
+
+	userRouter.HandleFunc(
+		"/{id}",
+		entityHandler.GetEntity,
+	).Methods("GET")
+
+	userRouter.HandleFunc(
+		"/{id}",
+		entityHandler.DeleteEntity,
+	).Methods("DELETE")
+
+	userRouter.HandleFunc(
+		"",
+		entityHandler.GetEntities,
+	).Methods("GET")
+
+	userRouter.HandleFunc(
+		"/{id}",
+		entityHandler.PutEntity,
+	).Methods("PUT")
+
+	userRouter.HandleFunc(
+		"",
+		entityHandler.PostEntity,
+	).Methods("POST")
+
+	return router
 }
 
 func StartServer(

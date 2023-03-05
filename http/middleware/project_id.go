@@ -5,28 +5,26 @@ import (
 	"crudly/ctx"
 	"crudly/http/dto"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
-type projectId struct{}
+func NewProjectId() mux.MiddlewareFunc {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			projectIdDto := dto.ProjectIdDto(r.Header.Get("x-project-id"))
+			projectIdResult := projectIdDto.ToModel()
 
-func NewProjectId() projectId {
-	return projectId{}
-}
+			if projectIdResult.IsErr() {
+				AttachError(w, projectIdResult.UnwrapErr())
+				w.WriteHeader(400)
+				w.Write([]byte("invalid project id header"))
+				return
+			}
 
-func (projectId) Attach(h func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		projectIdDto := dto.ProjectIdDto(r.Header.Get("x-project-id"))
-		projectIdResult := projectIdDto.ToModel()
+			ctx := context.WithValue(r.Context(), ctx.ProjectIdContextKey, projectIdResult.Unwrap())
 
-		if projectIdResult.IsErr() {
-			AttachError(w, projectIdResult.UnwrapErr())
-			w.WriteHeader(400)
-			w.Write([]byte("invalid project id header"))
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), ctx.ProjectIdContextKey, projectIdResult.Unwrap())
-
-		h(w, r.WithContext(ctx))
+			h.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }
