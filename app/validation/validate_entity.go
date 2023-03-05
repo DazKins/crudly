@@ -109,7 +109,12 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 		values := fieldDefinition.Values.Unwrap()
 
 		if !util.Contains(values, val) {
-			return fmt.Errorf("field: \"%s\" is not a supported enum. supported: %v", fieldName, values)
+			return fmt.Errorf(
+				"field: \"%s\" has value: \"%s\" which is not a supported value. supported values: %v",
+				fieldName,
+				val,
+				values,
+			)
 		}
 
 		return nil

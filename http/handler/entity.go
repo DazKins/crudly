@@ -2,6 +2,7 @@ package handler
 
 import (
 	"crudly/ctx"
+	"crudly/errs"
 	"crudly/http/dto"
 	"crudly/http/middleware"
 	"crudly/model"
@@ -173,7 +174,10 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if entitiesResult.IsErr() {
-		middleware.AttachError(w, entitiesResult.UnwrapErr())
+		err := entitiesResult.UnwrapErr()
+
+		middleware.AttachError(w, err)
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error getting entities"))
 		return
@@ -240,6 +244,13 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		middleware.AttachError(w, err)
+
+		if err, ok := err.(errs.InvalidEntityError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error creating entity"))
 		return
@@ -288,6 +299,13 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		middleware.AttachError(w, err)
+
+		if err, ok := err.(errs.InvalidEntityError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error creating entity"))
 		return
