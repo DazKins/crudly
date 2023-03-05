@@ -48,6 +48,12 @@ func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.Table
 	tableSchemaResult := t.tableSchemaFetcher.FetchTableSchema(projectId, name)
 
 	if tableSchemaResult.IsErr() {
+		err := tableSchemaResult.UnwrapErr()
+
+		if _, ok := err.(errs.TableNotFoundError); ok {
+			return tableSchemaResult
+		}
+
 		return result.Err[model.TableSchema](fmt.Errorf("error fetching table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 

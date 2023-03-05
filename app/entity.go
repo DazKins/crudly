@@ -1,6 +1,7 @@
 package app
 
 import (
+	"crudly/errs"
 	"crudly/model"
 	"crudly/util/result"
 	"fmt"
@@ -128,7 +129,7 @@ func (e entityManager) CreateEntityWithId(
 	err := e.entityValidator.ValidateEntity(entity, tableSchema)
 
 	if err != nil {
-		return fmt.Errorf("error validating entity: %w", err)
+		return errs.NewInvalidEntityError(err)
 	}
 
 	return e.entityCreator.CreateEntity(

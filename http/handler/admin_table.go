@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 
@@ -111,7 +110,7 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 
 		middleware.AttachError(w, err)
 
-		if errors.As(err, new(errs.TableNotFoundError)) {
+		if _, ok := err.(errs.TableNotFoundError); ok {
 			w.WriteHeader(404)
 			w.Write([]byte("table not found"))
 			return
