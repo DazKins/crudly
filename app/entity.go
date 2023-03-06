@@ -85,12 +85,22 @@ func (e entityManager) GetEntity(
 		return result.Err[model.Entity](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 
-	return e.entityFetcher.FetchEntity(
+	entityResult := e.entityFetcher.FetchEntity(
 		projectId,
 		tableName,
 		tableSchemaResult.Unwrap(),
 		id,
 	)
+
+	if entityResult.IsErr() {
+		err := entityResult.UnwrapErr()
+
+		if _, ok := err.(errs.EntityNotFoundError); ok {
+			return entityResult
+		}
+	}
+
+	return entityResult
 }
 
 func (e entityManager) GetEntities(

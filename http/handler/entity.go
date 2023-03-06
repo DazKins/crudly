@@ -93,7 +93,16 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if entityResult.IsErr() {
-		middleware.AttachError(w, entityResult.UnwrapErr())
+		err := entityResult.UnwrapErr()
+
+		middleware.AttachError(w, err)
+
+		if _, ok := err.(errs.EntityNotFoundError); ok {
+			w.WriteHeader(404)
+			w.Write([]byte("entity not found"))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error getting entity"))
 		return
