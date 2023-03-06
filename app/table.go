@@ -78,7 +78,7 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 	err := t.tableSchemaValidator.ValidateTableSchema(schema)
 
 	if err != nil {
-		return fmt.Errorf("table schema is not valid: %w", err)
+		return errs.NewInvalidTableError(err)
 	}
 
 	return t.tableCreator.CreateTable(

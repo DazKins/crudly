@@ -2,7 +2,7 @@ package validation
 
 import (
 	"crudly/model"
-	"errors"
+	"fmt"
 )
 
 type tableSchemaValidator struct{}
@@ -12,10 +12,14 @@ func NewTableSchemaValidator() tableSchemaValidator {
 }
 
 func (t tableSchemaValidator) ValidateTableSchema(schema model.TableSchema) error {
-	for _, v := range schema {
+	for k, v := range schema {
 		if v.Type == model.FieldTypeEnum {
 			if v.Values.IsNone() {
-				return errors.New("enum types must include a values array")
+				return fmt.Errorf("enum type \"%s\" definition must include a values array", k)
+			}
+		} else {
+			if v.Values.IsSome() {
+				return fmt.Errorf("non enum type definition \"%s\" has a values array", k)
 			}
 		}
 	}

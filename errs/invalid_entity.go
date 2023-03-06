@@ -13,5 +13,5 @@ func NewInvalidEntityError(validationError error) InvalidEntityError {
 }
 
 func (i InvalidEntityError) Error() string {
-	return fmt.Sprintf("entity validation failed: %s", i.validationError)
+	return fmt.Sprintf("entity is not valid: %s", i.validationError)
 }

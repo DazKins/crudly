@@ -81,6 +81,13 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		middleware.AttachError(w, err)
+
+		if err, ok := err.(errs.InvalidTableError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error creating table"))
 		return
