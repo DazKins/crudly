@@ -46,5 +46,6 @@ func (a adminProjectHandler) PostProject(w http.ResponseWriter, r *http.Request)
 
 	resBodyBytes, _ := json.Marshal(dto)
 
+	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)
 }

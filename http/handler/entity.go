@@ -103,6 +103,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 
 	resBodyBytes, _ := json.Marshal(entityDto)
 
+	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)
 }
 
@@ -165,6 +166,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 
 	resBodyBytes, _ := json.Marshal(entitiesDto)
 
+	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)
 }
 
