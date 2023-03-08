@@ -186,9 +186,12 @@ func getPostgresEntitiesQuery(
 		filters := ""
 
 		for k, v := range entityFilter {
-			if v.Type == model.FieldFilterTypeEquals {
-				filters += fmt.Sprintf("%s = %s AND ", k, getPostgresFieldValue(v.Comparator).Unwrap())
-			}
+			filters += fmt.Sprintf(
+				"%s %s %s AND ",
+				k,
+				getPostgresComparator(v.Type),
+				getPostgresFieldValue(v.Comparator).Unwrap(),
+			)
 		}
 
 		filters = strings.TrimSuffix(filters, " AND ")
@@ -200,4 +203,20 @@ func getPostgresEntitiesQuery(
 		" OFFSET " + paginationParams.Offset.String()
 
 	return query
+}
+
+func getPostgresComparator(fieldFilterType model.FieldFilterType) string {
+	switch fieldFilterType {
+	case model.FieldFilterTypeEquals:
+		return "="
+	case model.FieldFilterTypeGreaterThan:
+		return ">"
+	case model.FieldFilterTypeGreaterThanEq:
+		return ">="
+	case model.FieldFilterTypeLessThan:
+		return "<"
+	case model.FieldFilterTypeLessThanEq:
+		return "<="
+	}
+	panic(fmt.Sprintf("invalid field filter type has entered the system: %v", fieldFilterType))
 }

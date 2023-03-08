@@ -47,6 +47,14 @@ func getFieldFilterTypeFromQuery(filterTypeQuery string) result.Result[model.Fie
 	switch strings.ToLower(filterTypeQuery) {
 	case "equal":
 		return result.Ok(model.FieldFilterTypeEquals)
+	case ">":
+		return result.Ok(model.FieldFilterTypeGreaterThan)
+	case ">=":
+		return result.Ok(model.FieldFilterTypeGreaterThanEq)
+	case "<":
+		return result.Ok(model.FieldFilterTypeLessThan)
+	case "<=":
+		return result.Ok(model.FieldFilterTypeLessThanEq)
 	}
 	return result.Errf[model.FieldFilterType]("invalid field filter type: %s", filterTypeQuery)
 }
