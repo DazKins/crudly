@@ -25,7 +25,12 @@ type tableManager interface {
 
 type entityManager interface {
 	GetEntity(projectId model.ProjectId, tableName model.TableName, id model.EntityId) result.Result[model.Entity]
-	GetEntities(projectId model.ProjectId, tableName model.TableName, paginationParams model.PaginationParams) result.Result[model.Entities]
+	GetEntities(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entityFilter model.EntityFilter,
+		paginationParams model.PaginationParams,
+	) result.Result[model.Entities]
 	CreateEntityWithId(
 		projectId model.ProjectId,
 		tableName model.TableName,

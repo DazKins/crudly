@@ -8,6 +8,7 @@ import (
 	"crudly/model"
 	"crudly/util/result"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -24,6 +25,7 @@ type entityGetter interface {
 	GetEntities(
 		projectId model.ProjectId,
 		tableName model.TableName,
+		entityFilter model.EntityFilter,
 		paginationParams model.PaginationParams,
 	) result.Result[model.Entities]
 }
@@ -155,9 +157,19 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		paginationParams.Offset = offsetResult.Unwrap()
 	}
 
+	entityFilterResult := dto.GetEntityFilterFromQuery(r.URL.Query())
+
+	if entityFilterResult.IsErr() {
+		middleware.AttachError(w, entityFilterResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid entity filter"))
+		return
+	}
+
 	entitiesResult := e.entityGetter.GetEntities(
 		projectId,
 		tableName,
+		entityFilterResult.Unwrap(),
 		paginationParams,
 	)
 
@@ -165,6 +177,13 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		err := entitiesResult.UnwrapErr()
 
 		middleware.AttachError(w, err)
+
+		var invalidEntityFilterError errs.InvalidEntityFilterError
+		if errors.As(err, &invalidEntityFilterError) {
+			w.WriteHeader(400)
+			w.Write([]byte(invalidEntityFilterError.Error()))
+			return
+		}
 
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error getting entities"))

@@ -78,11 +78,13 @@ func (p postgresEntityFetcher) FetchEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	tableSchema model.TableSchema,
+	entityFilter model.EntityFilter,
 	paginationParams model.PaginationParams,
 ) result.Result[model.Entities] {
 	query := getPostgresEntitiesQuery(
 		projectId,
 		tableName,
+		entityFilter,
 		paginationParams,
 	)
 
@@ -171,8 +173,31 @@ func getPostgresEntityQuery(projectId model.ProjectId, tableName model.TableName
 	return "SELECT * FROM \"" + getPostgresTableName(projectId, tableName) + "\" WHERE id = '" + id.String() + "'"
 }
 
-func getPostgresEntitiesQuery(projectId model.ProjectId, tableName model.TableName, paginationParams model.PaginationParams) string {
-	return "SELECT * FROM \"" + getPostgresTableName(projectId, tableName) + "\"" +
-		" LIMIT " + paginationParams.Limit.String() +
+func getPostgresEntitiesQuery(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	entityFilter model.EntityFilter,
+	paginationParams model.PaginationParams,
+) string {
+
+	query := "SELECT * FROM \"" + getPostgresTableName(projectId, tableName) + "\""
+
+	if len(entityFilter) != 0 {
+		filters := ""
+
+		for k, v := range entityFilter {
+			if v.Type == model.FieldFilterTypeEquals {
+				filters += fmt.Sprintf("%s = %s AND ", k, getPostgresFieldValue(v.Comparator).Unwrap())
+			}
+		}
+
+		filters = strings.TrimSuffix(filters, " AND ")
+
+		query += " WHERE " + filters
+	}
+
+	query += " LIMIT " + paginationParams.Limit.String() +
 		" OFFSET " + paginationParams.Offset.String()
+
+	return query
 }

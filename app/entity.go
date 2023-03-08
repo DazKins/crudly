@@ -21,6 +21,7 @@ type entityFetcher interface {
 		projectId model.ProjectId,
 		table model.TableName,
 		tableSchema model.TableSchema,
+		entityFilter model.EntityFilter,
 		paginationParams model.PaginationParams,
 	) result.Result[model.Entities]
 }
@@ -50,12 +51,20 @@ type entityValidator interface {
 	ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error
 }
 
+type entityFilterValidator interface {
+	ValidateEntityFilter(
+		entityFilter model.EntityFilter,
+		tableSchema model.TableSchema,
+	) error
+}
+
 type entityManager struct {
-	entityFetcher     entityFetcher
-	entityCreator     entityCreator
-	entityDeleter     entityDeleter
-	tableSchemaGetter tableSchemaGetter
-	entityValidator   entityValidator
+	entityFetcher         entityFetcher
+	entityCreator         entityCreator
+	entityDeleter         entityDeleter
+	tableSchemaGetter     tableSchemaGetter
+	entityValidator       entityValidator
+	entityFilterValidator entityFilterValidator
 }
 
 func NewEntityManager(
@@ -64,6 +73,7 @@ func NewEntityManager(
 	entityDeleter entityDeleter,
 	tableSchemaGetter tableSchemaGetter,
 	entityValidator entityValidator,
+	entityFilterValidator entityFilterValidator,
 ) entityManager {
 	return entityManager{
 		entityFetcher,
@@ -71,6 +81,7 @@ func NewEntityManager(
 		entityDeleter,
 		tableSchemaGetter,
 		entityValidator,
+		entityFilterValidator,
 	}
 }
 
@@ -106,6 +117,7 @@ func (e entityManager) GetEntity(
 func (e entityManager) GetEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	entityFilter model.EntityFilter,
 	paginationParams model.PaginationParams,
 ) result.Result[model.Entities] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
@@ -114,10 +126,19 @@ func (e entityManager) GetEntities(
 		return result.Err[model.Entities](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 
+	tableSchema := tableSchemaResult.Unwrap()
+
+	err := e.entityFilterValidator.ValidateEntityFilter(entityFilter, tableSchema)
+
+	if err != nil {
+		return result.Err[model.Entities](errs.NewInvalidEntityFilterError(err))
+	}
+
 	return e.entityFetcher.FetchEntities(
 		projectId,
 		tableName,
-		tableSchemaResult.Unwrap(),
+		tableSchema,
+		entityFilter,
 		paginationParams,
 	)
 }

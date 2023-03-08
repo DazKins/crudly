@@ -1,5 +1,7 @@
 package result
 
+import "fmt"
+
 type Result[T any] struct {
 	value T
 	err   error
@@ -15,6 +17,12 @@ func Ok[T any](value T) Result[T] {
 func Err[T any](err error) Result[T] {
 	return Result[T]{
 		err: err,
+	}
+}
+
+func Errf[T any](str string, format ...any) Result[T] {
+	return Result[T]{
+		err: fmt.Errorf(str, format...),
 	}
 }
 

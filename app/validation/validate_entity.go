@@ -27,7 +27,7 @@ func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.T
 	return nil
 }
 
-const TimeFormat = "2006-01-02 15:04:05"
+const TimeFormat = "2006-01-02T15:04:05Z"
 
 func validateField(entity model.Entity, fieldName string, fieldDefinition model.FieldDefinition) error {
 	field := entity[fieldName]
