@@ -25,7 +25,7 @@ func (e entityFilterValidator) ValidateEntityFilter(
 		fieldDefinition, ok := tableSchema[k]
 
 		if !ok {
-			return fmt.Errorf("field: %s does not exist", k)
+			return fmt.Errorf("field: \"%s\" does not exist", k)
 		}
 
 		err := validateFieldFilter(k, entityFilter, fieldDefinition)

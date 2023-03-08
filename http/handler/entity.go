@@ -162,7 +162,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	if entityFilterResult.IsErr() {
 		middleware.AttachError(w, entityFilterResult.UnwrapErr())
 		w.WriteHeader(400)
-		w.Write([]byte("invalid entity filter"))
+		w.Write([]byte(entityFilterResult.UnwrapErr().Error()))
 		return
 	}
 

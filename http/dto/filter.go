@@ -13,48 +13,54 @@ func GetEntityFilterFromQuery(query url.Values) result.Result[model.EntityFilter
 	entityFilter := model.EntityFilter{}
 
 	for _, v := range filterQuery {
-		filterVals := strings.Split(v, "|")
+		fieldFilterTypeResult := getFieldFilterTypeFromQuery(v)
 
-		if len(filterVals) != 3 {
-			return result.Errf[model.EntityFilter]("invalid entity filer: %s", v)
+		if fieldFilterTypeResult.IsErr() {
+			return result.Err[model.EntityFilter](fieldFilterTypeResult.UnwrapErr())
 		}
 
-		fieldName := filterVals[0]
+		fieldFilterType := fieldFilterTypeResult.Unwrap()
 
-		filterTypeResult := getFieldFilterTypeFromQuery(filterVals[1])
+		vals := strings.Split(v, fieldFilterType.String())
 
-		if filterTypeResult.IsErr() {
+		if len(vals) != 2 {
 			return result.Errf[model.EntityFilter](
-				"error getting filter type %w",
-				filterTypeResult.UnwrapErr().Error(),
+				"invalid filter: %s", v,
 			)
 		}
 
-		comparator := filterVals[2]
+		fieldName := vals[0]
+		comparator := vals[1]
 
-		fieldFilter := model.FieldFilter{
-			Type:       filterTypeResult.Unwrap(),
+		entityFilter[fieldName] = model.FieldFilter{
+			Type:       fieldFilterType,
 			Comparator: comparator,
 		}
-
-		entityFilter[fieldName] = fieldFilter
 	}
 
 	return result.Ok(entityFilter)
 }
 
 func getFieldFilterTypeFromQuery(filterTypeQuery string) result.Result[model.FieldFilterType] {
-	switch strings.ToLower(filterTypeQuery) {
-	case "equal":
-		return result.Ok(model.FieldFilterTypeEquals)
-	case ">":
-		return result.Ok(model.FieldFilterTypeGreaterThan)
-	case ">=":
+	if strings.Contains(filterTypeQuery, ">=") {
 		return result.Ok(model.FieldFilterTypeGreaterThanEq)
-	case "<":
-		return result.Ok(model.FieldFilterTypeLessThan)
-	case "<=":
+	}
+
+	if strings.Contains(filterTypeQuery, "<=") {
 		return result.Ok(model.FieldFilterTypeLessThanEq)
 	}
-	return result.Errf[model.FieldFilterType]("invalid field filter type: %s", filterTypeQuery)
+
+	if strings.Contains(filterTypeQuery, ">") {
+		return result.Ok(model.FieldFilterTypeGreaterThan)
+	}
+
+	if strings.Contains(filterTypeQuery, "<") {
+		return result.Ok(model.FieldFilterTypeLessThan)
+	}
+
+	if strings.Contains(filterTypeQuery, "=") {
+		return result.Ok(model.FieldFilterTypeEquals)
+	}
+
+	return result.Errf[model.FieldFilterType]("invalid filter type: %s", filterTypeQuery)
 }

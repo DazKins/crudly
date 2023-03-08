@@ -21,7 +21,7 @@ func (f FieldFilterType) String() string {
 	case FieldFilterTypeLessThan:
 		return "<"
 	case FieldFilterTypeLessThanEq:
-		return "<"
+		return "<="
 	}
 	panic("invalid field filter type has entered the system in stringify!")
 }
