@@ -10,6 +10,22 @@ const (
 	FieldFilterTypeLessThanEq    FieldFilterType = 4
 )
 
+func (f FieldFilterType) String() string {
+	switch f {
+	case FieldFilterTypeEquals:
+		return "="
+	case FieldFilterTypeGreaterThan:
+		return ">"
+	case FieldFilterTypeGreaterThanEq:
+		return ">="
+	case FieldFilterTypeLessThan:
+		return "<"
+	case FieldFilterTypeLessThanEq:
+		return "<"
+	}
+	panic("invalid field filter type has entered the system in stringify!")
+}
+
 type FieldFilter struct {
 	Type       FieldFilterType
 	Comparator interface{}

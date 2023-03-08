@@ -31,11 +31,46 @@ func (e entityFilterValidator) ValidateEntityFilter(
 		err := validateFieldFilter(k, entityFilter, fieldDefinition)
 
 		if err != nil {
-			return fmt.Errorf("error validating field: %s: %w", k, err)
+			return fmt.Errorf("error validating field: \"%s\": %w", k, err)
 		}
 	}
 
 	return nil
+}
+
+func isValidFieldFilter(fieldType model.FieldType, fieldFilterType model.FieldFilterType) bool {
+	validityMap := map[model.FieldType][]model.FieldFilterType{
+		model.FieldTypeId: {
+			model.FieldFilterTypeEquals,
+		},
+		model.FieldTypeInteger: {
+			model.FieldFilterTypeEquals,
+			model.FieldFilterTypeGreaterThan,
+			model.FieldFilterTypeGreaterThanEq,
+			model.FieldFilterTypeLessThan,
+			model.FieldFilterTypeLessThanEq,
+		},
+		model.FieldTypeString: {
+			model.FieldFilterTypeEquals,
+		},
+		model.FieldTypeBoolean: {
+			model.FieldFilterTypeEquals,
+		},
+		model.FieldTypeTime: {
+			model.FieldFilterTypeEquals,
+			model.FieldFilterTypeGreaterThan,
+			model.FieldFilterTypeGreaterThanEq,
+			model.FieldFilterTypeLessThan,
+			model.FieldFilterTypeLessThanEq,
+		},
+		model.FieldTypeEnum: {
+			model.FieldFilterTypeEquals,
+		},
+	}
+
+	validFilters := validityMap[fieldType]
+
+	return util.Contains(validFilters, fieldFilterType)
 }
 
 func validateFieldFilter(
@@ -48,7 +83,15 @@ func validateFieldFilter(
 	comparator, ok := parsedFieldFilter.Comparator.(string)
 
 	if !ok {
-		panic("comparator was not a string. should never happen")
+		panic("comparator was not a string.")
+	}
+
+	if !isValidFieldFilter(fieldDefinition.Type, parsedFieldFilter.Type) {
+		return fmt.Errorf(
+			"filter: \"%s\" is not valid for field type \"%s\"",
+			parsedFieldFilter.Type.String(),
+			fieldDefinition.Type.String(),
+		)
 	}
 
 	switch fieldDefinition.Type {

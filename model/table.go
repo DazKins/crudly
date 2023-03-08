@@ -1,6 +1,8 @@
 package model
 
-import "crudly/util/optional"
+import (
+	"crudly/util/optional"
+)
 
 type FieldType uint8
 
@@ -12,6 +14,24 @@ const (
 	FieldTypeTime    FieldType = 4
 	FieldTypeEnum    FieldType = 5
 )
+
+func (f FieldType) String() string {
+	switch f {
+	case FieldTypeId:
+		return "id"
+	case FieldTypeInteger:
+		return "integer"
+	case FieldTypeString:
+		return "string"
+	case FieldTypeBoolean:
+		return "boolean"
+	case FieldTypeTime:
+		return "time"
+	case FieldTypeEnum:
+		return "enum"
+	}
+	panic("invalid field type has entered the system in stringify!")
+}
 
 type TableName string
 
