@@ -4,6 +4,7 @@ import (
 	"crudly/errs"
 	"crudly/model"
 	"crudly/util/result"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -191,9 +192,19 @@ func (e entityManager) DeleteEntity(
 	tableName model.TableName,
 	id model.EntityId,
 ) error {
-	return e.entityDeleter.DeleteEntity(
+	err := e.entityDeleter.DeleteEntity(
 		projectId,
 		tableName,
 		id,
 	)
+
+	if err != nil {
+		if errors.As(err, new(errs.EntityNotFoundError)) {
+			return err
+		}
+
+		return fmt.Errorf("error deleting entity: %w", err)
+	}
+
+	return nil
 }

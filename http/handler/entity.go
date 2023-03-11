@@ -323,6 +323,13 @@ func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		middleware.AttachError(w, err)
+
+		if errors.As(err, new(errs.EntityNotFoundError)) {
+			w.WriteHeader(404)
+			w.Write([]byte("entity not found"))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error deleting entity"))
 		return

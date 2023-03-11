@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crudly/errs"
 	"crudly/model"
 	"database/sql"
 	"fmt"
@@ -27,15 +28,21 @@ func (p postgresEntityDeleter) DeleteEntity(
 		id,
 	)
 
-	res, err := p.postgres.Query(query)
+	res, err := p.postgres.Exec(query)
 
 	if err != nil {
 		return fmt.Errorf("error querying postgres: %w", err)
 	}
 
-	test := res.Next()
+	count, err := res.RowsAffected()
 
-	fmt.Printf("%v", test)
+	if err != nil {
+		return fmt.Errorf("error determining affected postgres rows: %w", err)
+	}
+
+	if count == 0 {
+		return errs.EntityNotFoundError{}
+	}
 
 	return nil
 }
