@@ -73,3 +73,22 @@ func GetEntitiesDto(entities model.Entities) EntitiesDto {
 
 	return result
 }
+
+type PartialEntityDto map[string]FieldDto
+
+func (p PartialEntityDto) ToModel() result.Result[model.PartialEntity] {
+	res := model.PartialEntity{}
+
+	for k, v := range p {
+		fieldResult := FieldDtoToModel(v)
+
+		if fieldResult.IsErr() {
+			err := fieldResult.UnwrapErr()
+			return result.Err[model.PartialEntity](fmt.Errorf("error parsing field: %w", err))
+		}
+
+		res[k] = fieldResult.Unwrap()
+	}
+
+	return result.Ok(res)
+}

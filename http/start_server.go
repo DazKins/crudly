@@ -42,6 +42,12 @@ type entityManager interface {
 		tableName model.TableName,
 		entity model.Entity,
 	) error
+	UpdateEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+		partialEntity model.PartialEntity,
+	) error
 	DeleteEntity(
 		projectId model.ProjectId,
 		tableName model.TableName,
@@ -61,6 +67,7 @@ func createHandler(
 		tableManager,
 	)
 	entityHandler := handler.NewEntityHandler(
+		entityManager,
 		entityManager,
 		entityManager,
 		entityManager,
@@ -102,6 +109,11 @@ func createHandler(
 		"/{id}",
 		entityHandler.GetEntity,
 	).Methods("GET")
+
+	userRouter.HandleFunc(
+		"/{id}",
+		entityHandler.PatchEntity,
+	).Methods("PATCH")
 
 	userRouter.HandleFunc(
 		"/{id}",

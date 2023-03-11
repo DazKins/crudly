@@ -10,15 +10,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type entityValidator struct{}
+type partialEntityValidator struct{}
 
-func NewEntityValidator() entityValidator {
-	return entityValidator{}
+func NewPartialEntityValidator() partialEntityValidator {
+	return partialEntityValidator{}
 }
 
-func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error {
-	for k, v := range tableSchema {
-		err := validateField(entity, k, v)
+func (p partialEntityValidator) ValidatePartialEntity(partialEntity model.PartialEntity, tableSchema model.TableSchema) error {
+	for k := range partialEntity {
+		fieldDefinition, ok := tableSchema[k]
+
+		if !ok {
+			return fmt.Errorf("field \"%s\" does not exist in table schema", k)
+		}
+
+		err := validatePartialField(partialEntity, k, fieldDefinition)
 
 		if err != nil {
 			return err
@@ -27,10 +33,12 @@ func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.T
 	return nil
 }
 
-const TimeFormat = "2006-01-02T15:04:05Z"
-
-func validateField(entity model.Entity, fieldName string, fieldDefinition model.FieldDefinition) error {
-	field := entity[fieldName]
+func validatePartialField(
+	partialEntity model.PartialEntity,
+	fieldName string,
+	fieldDefinition model.FieldDefinition,
+) error {
+	field := partialEntity[fieldName]
 
 	switch fieldDefinition.Type {
 	case model.FieldTypeId:
@@ -46,7 +54,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 			return fmt.Errorf("error parsing field \"%s\" as a uuid: %w", fieldName, err)
 		}
 
-		entity[fieldName] = uuidVal
+		partialEntity[fieldName] = uuidVal
 
 		return nil
 	case model.FieldTypeInteger:
@@ -62,7 +70,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 			return fmt.Errorf("field: \"%s\" is not a valid integer", fieldName)
 		}
 
-		entity[fieldName] = int(truncated)
+		partialEntity[fieldName] = int(truncated)
 
 		return nil
 	case model.FieldTypeBoolean:
@@ -72,7 +80,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 			return fmt.Errorf("field: \"%s\" is not a valid boolean", fieldName)
 		}
 
-		entity[fieldName] = boolean
+		partialEntity[fieldName] = boolean
 
 		return nil
 	case model.FieldTypeString:
@@ -96,7 +104,7 @@ func validateField(entity model.Entity, fieldName string, fieldDefinition model.
 			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, err)
 		}
 
-		entity[fieldName] = time
+		partialEntity[fieldName] = time
 
 		return nil
 	case model.FieldTypeEnum:

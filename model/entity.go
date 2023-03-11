@@ -13,3 +13,5 @@ type Field any
 type Entity map[string]Field
 
 type Entities []Entity
+
+type PartialEntity map[string]Field

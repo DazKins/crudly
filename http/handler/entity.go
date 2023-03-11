@@ -45,6 +45,15 @@ type entityCreator interface {
 	) error
 }
 
+type entityUpdater interface {
+	UpdateEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+		partialEntity model.PartialEntity,
+	) error
+}
+
 type entityDeleter interface {
 	DeleteEntity(
 		projectId model.ProjectId,
@@ -56,17 +65,20 @@ type entityDeleter interface {
 type entityHandler struct {
 	entityGetter  entityGetter
 	entityCreator entityCreator
+	entityUpdater entityUpdater
 	entityDeleter entityDeleter
 }
 
 func NewEntityHandler(
 	entityGetter entityGetter,
 	entityCreator entityCreator,
+	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
 ) entityHandler {
 	return entityHandler{
 		entityGetter,
 		entityCreator,
+		entityUpdater,
 		entityDeleter,
 	}
 }
@@ -294,6 +306,63 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error creating entity"))
+		return
+	}
+}
+
+func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
+
+	vars := mux.Vars(r)
+
+	entityIdDto := dto.EntityIdDto(vars["id"])
+
+	entityIdResult := entityIdDto.ToModel()
+
+	if entityIdResult.IsErr() {
+		middleware.AttachError(w, entityIdResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid entity id"))
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		panic("error reading body")
+	}
+
+	var partialEntityDto dto.PartialEntityDto
+	json.Unmarshal(bodyBytes, &partialEntityDto)
+
+	partialEntityResult := partialEntityDto.ToModel()
+
+	if partialEntityResult.IsErr() {
+		middleware.AttachError(w, partialEntityResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid entity"))
+		return
+	}
+
+	err = e.entityUpdater.UpdateEntity(
+		projectId,
+		tableName,
+		entityIdResult.Unwrap(),
+		partialEntityResult.Unwrap(),
+	)
+
+	if err != nil {
+		middleware.AttachError(w, err)
+
+		if errors.As(err, new(errs.InvalidPartialEntityError)) {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error updating entity"))
 		return
 	}
 }

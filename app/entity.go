@@ -36,6 +36,15 @@ type entityCreator interface {
 	) error
 }
 
+type entityUpdater interface {
+	UpdateEntity(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		id model.EntityId,
+		partialEntity model.PartialEntity,
+	) error
+}
+
 type entityDeleter interface {
 	DeleteEntity(
 		projectId model.ProjectId,
@@ -52,6 +61,10 @@ type entityValidator interface {
 	ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error
 }
 
+type partialEntityValidator interface {
+	ValidatePartialEntity(partialEntity model.PartialEntity, tableSchema model.TableSchema) error
+}
+
 type entityFilterValidator interface {
 	ValidateEntityFilter(
 		entityFilter model.EntityFilter,
@@ -60,28 +73,34 @@ type entityFilterValidator interface {
 }
 
 type entityManager struct {
-	entityFetcher         entityFetcher
-	entityCreator         entityCreator
-	entityDeleter         entityDeleter
-	tableSchemaGetter     tableSchemaGetter
-	entityValidator       entityValidator
-	entityFilterValidator entityFilterValidator
+	entityFetcher          entityFetcher
+	entityCreator          entityCreator
+	entityUpdater          entityUpdater
+	entityDeleter          entityDeleter
+	tableSchemaGetter      tableSchemaGetter
+	entityValidator        entityValidator
+	partialEntityValidator partialEntityValidator
+	entityFilterValidator  entityFilterValidator
 }
 
 func NewEntityManager(
 	entityFetcher entityFetcher,
 	entityCreator entityCreator,
+	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
 	tableSchemaGetter tableSchemaGetter,
 	entityValidator entityValidator,
+	partialEntityValidator partialEntityValidator,
 	entityFilterValidator entityFilterValidator,
 ) entityManager {
 	return entityManager{
 		entityFetcher,
 		entityCreator,
+		entityUpdater,
 		entityDeleter,
 		tableSchemaGetter,
 		entityValidator,
+		partialEntityValidator,
 		entityFilterValidator,
 	}
 }
@@ -184,6 +203,34 @@ func (e entityManager) CreateEntity(
 		tableName,
 		id,
 		entity,
+	)
+}
+
+func (e entityManager) UpdateEntity(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	id model.EntityId,
+	partialEntity model.PartialEntity,
+) error {
+	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
+
+	if tableSchemaResult.IsErr() {
+		return fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr())
+	}
+
+	tableSchema := tableSchemaResult.Unwrap()
+
+	err := e.partialEntityValidator.ValidatePartialEntity(partialEntity, tableSchema)
+
+	if err != nil {
+		return errs.NewInvalidPartialEntityError(err)
+	}
+
+	return e.entityUpdater.UpdateEntity(
+		projectId,
+		tableName,
+		id,
+		partialEntity,
 	)
 }
 
