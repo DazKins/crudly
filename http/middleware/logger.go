@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -52,15 +53,22 @@ func NewLogger(writer io.Writer) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ww := wrapWriter(w)
 
+			t0 := time.Now()
+
 			h.ServeHTTP(ww, r)
+
+			t1 := time.Now()
 
 			body := strings.TrimSuffix(string(ww.loggerDetails.body), "\n")
 
+			requestTimeMs := t1.Sub(t0).Milliseconds()
+
 			log := fmt.Sprintf(
-				"[%s %s] %d\nResponse Body: %s\n",
+				"[%s %s] %d\nRequest Time: %dms\nResponse Body: %s\n",
 				r.Method,
 				r.URL,
 				ww.loggerDetails.status,
+				requestTimeMs,
 				body,
 			)
 
