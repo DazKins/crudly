@@ -4,7 +4,6 @@ import (
 	"crudly/errs"
 	"crudly/model"
 	"crudly/util/result"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -183,12 +182,22 @@ func (e entityManager) CreateEntityWithId(
 		return errs.NewInvalidEntityError(err)
 	}
 
-	return e.entityCreator.CreateEntity(
+	err = e.entityCreator.CreateEntity(
 		projectId,
 		tableName,
 		id,
 		entity,
 	)
+
+	if err != nil {
+		if _, ok := err.(errs.EntityAlreadyExistsError); ok {
+			return err
+		}
+
+		return fmt.Errorf("error creating entity: %w", err)
+	}
+
+	return nil
 }
 
 func (e entityManager) CreateEntity(
@@ -246,7 +255,7 @@ func (e entityManager) DeleteEntity(
 	)
 
 	if err != nil {
-		if errors.As(err, new(errs.EntityNotFoundError)) {
+		if _, ok := err.(errs.EntityNotFoundError); ok {
 			return err
 		}
 

@@ -40,8 +40,9 @@ func (t TableName) String() string {
 }
 
 type FieldDefinition struct {
-	Type   FieldType
-	Values optional.Optional[[]string]
+	Type       FieldType
+	Values     optional.Optional[[]string]
+	PrimaryKey bool
 }
 
 type TableSchema map[string]FieldDefinition

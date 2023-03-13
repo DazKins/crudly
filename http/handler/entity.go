@@ -8,7 +8,6 @@ import (
 	"crudly/model"
 	"crudly/util/result"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 
@@ -190,8 +189,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 
 		middleware.AttachError(w, err)
 
-		var invalidEntityFilterError errs.InvalidEntityFilterError
-		if errors.As(err, &invalidEntityFilterError) {
+		if invalidEntityFilterError, ok := err.(errs.InvalidEntityFilterError); ok {
 			w.WriteHeader(400)
 			w.Write([]byte(invalidEntityFilterError.Error()))
 			return
@@ -258,6 +256,12 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 		if err, ok := err.(errs.InvalidEntityError); ok {
 			w.WriteHeader(400)
 			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if _, ok := err.(errs.EntityAlreadyExistsError); ok {
+			w.WriteHeader(409)
+			w.Write([]byte("entity already exists"))
 			return
 		}
 
@@ -355,7 +359,7 @@ func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		middleware.AttachError(w, err)
 
-		if errors.As(err, new(errs.InvalidPartialEntityError)) {
+		if _, ok := err.(errs.InvalidPartialEntityError); ok {
 			w.WriteHeader(400)
 			w.Write([]byte(err.Error()))
 			return
@@ -393,7 +397,7 @@ func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		middleware.AttachError(w, err)
 
-		if errors.As(err, new(errs.EntityNotFoundError)) {
+		if _, ok := err.(errs.EntityNotFoundError); ok {
 			w.WriteHeader(404)
 			w.Write([]byte("entity not found"))
 			return

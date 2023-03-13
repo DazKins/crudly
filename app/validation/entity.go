@@ -3,7 +3,6 @@ package validation
 import (
 	"crudly/model"
 	"crudly/util"
-	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -19,20 +18,23 @@ func NewEntityValidator() entityValidator {
 
 func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error {
 	for k := range entity {
-		err := validateField(entity, k, tableSchema[k])
+		fieldDefinition, ok := tableSchema[k]
+
+		if !ok {
+			return fmt.Errorf("field \"%s\" does not exist in table schema", k)
+		}
+
+		err := validateField(entity, k, fieldDefinition)
 
 		if err != nil {
 			return err
 		}
 	}
 
-	entityKeys := util.Keys(entity)
-	tableSchemaKeys := util.Keys(tableSchema)
+	missingFields := util.MapSubtract(tableSchema, entity)
 
-	keysEqual := util.SetEqual(entityKeys, tableSchemaKeys)
-
-	if !keysEqual {
-		return errors.New("table schema keys do not match up with entity keys")
+	if len(missingFields) != 0 {
+		return fmt.Errorf("missing fields: %+v", util.Keys(missingFields))
 	}
 
 	return nil

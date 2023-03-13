@@ -88,7 +88,7 @@ func getPostgresTableCreationQuery(
 ) string {
 	query := "CREATE TABLE \"" + getPostgresTableName(projectId, name) + "\"("
 	for k, v := range schema {
-		fieldQuery := getPostgresFieldQuery(k, v.Type)
+		fieldQuery := getPostgresFieldQuery(k, v)
 		query += fieldQuery + ","
 	}
 	query = strings.TrimSuffix(query, ",")
@@ -97,8 +97,16 @@ func getPostgresTableCreationQuery(
 	return query
 }
 
-func getPostgresFieldQuery(key string, fieldType model.FieldType) string {
-	return key + " " + getPostgresDatatype(fieldType) + " NOT NULL"
+func getPostgresFieldQuery(key string, fieldDefinition model.FieldDefinition) string {
+	fieldQuery := key + " " + getPostgresDatatype(fieldDefinition.Type)
+
+	if fieldDefinition.PrimaryKey {
+		fieldQuery += " PRIMARY KEY"
+	} else {
+		fieldQuery += " NOT NULL"
+	}
+
+	return fieldQuery
 }
 
 func getPostgresDatatype(fieldType model.FieldType) string {

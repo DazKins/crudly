@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crudly/errs"
 	"crudly/model"
 	"crudly/util"
 	"crudly/util/result"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type postgresEntityCreator struct {
@@ -37,6 +39,12 @@ func (p postgresEntityCreator) CreateEntity(
 	_, err := p.postgres.Query(query)
 
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" {
+				return errs.EntityAlreadyExistsError{}
+			}
+		}
+
 		return fmt.Errorf("error querying postgres: %w", err)
 	}
 

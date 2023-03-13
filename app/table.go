@@ -72,7 +72,8 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 	}
 
 	schema["id"] = model.FieldDefinition{
-		Type: model.FieldTypeId,
+		Type:       model.FieldTypeId,
+		PrimaryKey: true,
 	}
 
 	err := t.tableSchemaValidator.ValidateTableSchema(schema)
