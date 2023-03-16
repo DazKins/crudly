@@ -81,56 +81,56 @@ func createHandler(
 	router := mux.NewRouter()
 	router.Use(loggerMiddleware)
 
-	router.HandleFunc(
-		"/project",
+	projectRouter := router.PathPrefix("/projects").Subrouter()
+
+	projectRouter.HandleFunc(
+		"",
 		adminProjectHandler.PostProject,
 	).Methods("POST")
 
-	adminRouter := router.PathPrefix("/admin").Subrouter()
-	adminRouter.Use(projectIdMiddleware)
-	adminRouter.Use(projectAuthMiddleware)
+	tableRouter := router.PathPrefix("/tables").Subrouter()
+	tableRouter.Use(projectIdMiddleware)
+	tableRouter.Use(projectAuthMiddleware)
+	tableRouter.Use(tableNameMiddleware)
 
-	adminRouter.HandleFunc(
-		"/table/{tableName}",
+	tableRouter.HandleFunc(
+		"/{tableName}",
 		adminTableHandler.PutTable,
 	).Methods("PUT")
 
-	adminRouter.HandleFunc(
-		"/table/{tableName}",
+	tableRouter.HandleFunc(
+		"/{tableName}",
 		adminTableHandler.GetTable,
 	).Methods("GET")
 
-	userRouter := router.PathPrefix("/{tableName}").Subrouter()
-	userRouter.Use(projectIdMiddleware)
-	userRouter.Use(projectAuthMiddleware)
-	userRouter.Use(tableNameMiddleware)
+	entityRouter := tableRouter.PathPrefix("/{tableName}/entities").Subrouter()
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"/{id}",
 		entityHandler.GetEntity,
 	).Methods("GET")
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"/{id}",
 		entityHandler.PatchEntity,
 	).Methods("PATCH")
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"/{id}",
 		entityHandler.DeleteEntity,
 	).Methods("DELETE")
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"",
 		entityHandler.GetEntities,
 	).Methods("GET")
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"/{id}",
 		entityHandler.PutEntity,
 	).Methods("PUT")
 
-	userRouter.HandleFunc(
+	entityRouter.HandleFunc(
 		"",
 		entityHandler.PostEntity,
 	).Methods("POST")
