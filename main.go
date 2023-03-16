@@ -24,6 +24,7 @@ func main() {
 
 	postgresTableCreatorService := service.NewPostgresTableCreator(postgres)
 	postgresTableGetterService := service.NewPostgresTableFetcher(postgres)
+	postgresTableDeleterService := service.NewPostgresTableDeleter(postgres)
 	postgresEntityFetcherService := service.NewPostgresEntityFetcher(postgres)
 	postgresEntityCreatorService := service.NewPostgresEntityCreator(postgres)
 	postgresEntityUpdaterService := service.NewPostgresEntityUpdater(postgres)
@@ -40,6 +41,7 @@ func main() {
 	tableManager := app.NewTableManager(
 		postgresTableGetterService,
 		postgresTableCreatorService,
+		postgresTableDeleterService,
 		tableSchemaValidator,
 	)
 	entityManager := app.NewEntityManager(

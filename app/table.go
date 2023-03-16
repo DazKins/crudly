@@ -22,6 +22,13 @@ type tableSchemaFetcher interface {
 	) result.Result[model.TableSchema]
 }
 
+type tableDeleter interface {
+	DeleteTable(
+		projectId model.ProjectId,
+		name model.TableName,
+	) error
+}
+
 type tableSchemaValidator interface {
 	ValidateTableSchema(schema model.TableSchema) error
 }
@@ -29,17 +36,20 @@ type tableSchemaValidator interface {
 type tableManager struct {
 	tableSchemaFetcher   tableSchemaFetcher
 	tableCreator         tableCreator
+	tableDeleter         tableDeleter
 	tableSchemaValidator tableSchemaValidator
 }
 
 func NewTableManager(
 	tableSchemaFetcher tableSchemaFetcher,
 	tableCreator tableCreator,
+	tableDeleter tableDeleter,
 	tableSchemaValidator tableSchemaValidator,
 ) tableManager {
 	return tableManager{
 		tableSchemaFetcher,
 		tableCreator,
+		tableDeleter,
 		tableSchemaValidator,
 	}
 }
@@ -87,4 +97,8 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 		name,
 		schema,
 	)
+}
+
+func (t tableManager) DeleteTable(projectId model.ProjectId, name model.TableName) error {
+	return t.tableDeleter.DeleteTable(projectId, name)
 }

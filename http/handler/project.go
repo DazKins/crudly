@@ -14,26 +14,26 @@ type projectCreator interface {
 	CreateProject() result.Result[model.CreateProjectResponse]
 }
 
-type adminProjectHandler struct {
+type projectHandler struct {
 	config         config.Config
 	projectCreator projectCreator
 }
 
-func NewAdminProjectHandler(config config.Config, projectCreator projectCreator) adminProjectHandler {
-	return adminProjectHandler{
+func NewProjectHandler(config config.Config, projectCreator projectCreator) projectHandler {
+	return projectHandler{
 		config,
 		projectCreator,
 	}
 }
 
-func (a adminProjectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("x-api-key") != a.config.ProjectCreationApiKey {
+func (p projectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("x-api-key") != p.config.ProjectCreationApiKey {
 		w.WriteHeader(401)
 		w.Write([]byte("incorrect api key"))
 		return
 	}
 
-	createProjectResult := a.projectCreator.CreateProject()
+	createProjectResult := p.projectCreator.CreateProject()
 
 	if createProjectResult.IsErr() {
 		middleware.AttachError(w, createProjectResult.UnwrapErr())

@@ -27,19 +27,29 @@ type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
 }
 
-type adminTableHandler struct {
-	tableCreator      tableCreator
-	tableSchemaGetter tableSchemaGetter
+type tableDeleter interface {
+	DeleteTable(projectId model.ProjectId, name model.TableName) error
 }
 
-func NewAdminTableHandler(tableCreator tableCreator, tableSchemaGetter tableSchemaGetter) adminTableHandler {
-	return adminTableHandler{
+type tableHandler struct {
+	tableCreator      tableCreator
+	tableSchemaGetter tableSchemaGetter
+	tableDeleter      tableDeleter
+}
+
+func NewTableHandler(
+	tableCreator tableCreator,
+	tableSchemaGetter tableSchemaGetter,
+	tableDeleter tableDeleter,
+) tableHandler {
+	return tableHandler{
 		tableCreator,
 		tableSchemaGetter,
+		tableDeleter,
 	}
 }
 
-func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
+func (t tableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
@@ -73,7 +83,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = e.tableCreator.CreateTable(
+	err = t.tableCreator.CreateTable(
 		projectId,
 		tableNameResult.Unwrap(),
 		tableSchemaResult.Unwrap(),
@@ -94,7 +104,7 @@ func (e adminTableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
+func (t tableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
@@ -110,7 +120,7 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableNameResult.Unwrap())
+	tableSchemaResult := t.tableSchemaGetter.GetTableSchema(projectId, tableNameResult.Unwrap())
 
 	if tableSchemaResult.IsErr() {
 		err := tableSchemaResult.UnwrapErr()
@@ -134,4 +144,32 @@ func (e adminTableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)
+}
+
+func (t tableHandler) DeleteTable(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+
+	vars := mux.Vars(r)
+
+	tableNameDto := dto.TableNameDto(vars["tableName"])
+
+	tableNameResult := tableNameDto.ToModel()
+
+	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
+		return
+	}
+
+	err := t.tableDeleter.DeleteTable(projectId, tableNameResult.Unwrap())
+
+	if err != nil {
+		middleware.AttachError(w, err)
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error deleting table"))
+		return
+	}
+
+	w.WriteHeader(204)
 }

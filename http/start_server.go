@@ -21,6 +21,7 @@ type projectManager interface {
 type tableManager interface {
 	CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
+	DeleteTable(projectId model.ProjectId, name model.TableName) error
 }
 
 type entityManager interface {
@@ -61,8 +62,9 @@ func createHandler(
 	tableManager tableManager,
 	entityManager entityManager,
 ) http.Handler {
-	adminProjectHandler := handler.NewAdminProjectHandler(config, projectManager)
-	adminTableHandler := handler.NewAdminTableHandler(
+	projectHandler := handler.NewProjectHandler(config, projectManager)
+	tableHandler := handler.NewTableHandler(
+		tableManager,
 		tableManager,
 		tableManager,
 	)
@@ -85,7 +87,7 @@ func createHandler(
 
 	projectRouter.HandleFunc(
 		"",
-		adminProjectHandler.PostProject,
+		projectHandler.PostProject,
 	).Methods("POST")
 
 	tableRouter := router.PathPrefix("/tables").Subrouter()
@@ -95,13 +97,18 @@ func createHandler(
 
 	tableRouter.HandleFunc(
 		"/{tableName}",
-		adminTableHandler.PutTable,
+		tableHandler.PutTable,
 	).Methods("PUT")
 
 	tableRouter.HandleFunc(
 		"/{tableName}",
-		adminTableHandler.GetTable,
+		tableHandler.GetTable,
 	).Methods("GET")
+
+	tableRouter.HandleFunc(
+		"/{tableName}",
+		tableHandler.DeleteTable,
+	).Methods("DELETE")
 
 	entityRouter := tableRouter.PathPrefix("/{tableName}/entities").Subrouter()
 
