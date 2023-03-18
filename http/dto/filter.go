@@ -29,10 +29,17 @@ func GetEntityFilterFromQuery(query url.Values) result.Result[model.EntityFilter
 			)
 		}
 
-		fieldName := vals[0]
+		fieldNameDto := FieldNameDto(vals[0])
+		fieldNameResult := fieldNameDto.ToModel()
+
+		if fieldNameResult.IsErr() {
+			err := fieldNameResult.UnwrapErr()
+			return result.Errf[model.EntityFilter]("error parsing filter field name: %w", err)
+		}
+
 		comparator := vals[1]
 
-		entityFilter[fieldName] = model.FieldFilter{
+		entityFilter[fieldNameResult.Unwrap()] = model.FieldFilter{
 			Type:       fieldFilterType,
 			Comparator: comparator,
 		}

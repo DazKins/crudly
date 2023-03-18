@@ -73,12 +73,29 @@ func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 	}
 }
 
-type TableSchemaDto map[string]FieldDefinitionDto
+type FieldNameDto string
+
+func (f FieldNameDto) ToModel() result.Result[model.FieldName] {
+	return result.Ok(model.FieldName(string(f)))
+}
+
+func GetFieldNameDto(f model.FieldName) FieldNameDto {
+	return FieldNameDto(string(f))
+}
+
+type TableSchemaDto map[FieldNameDto]FieldDefinitionDto
 
 func (e TableSchemaDto) ToModel() result.Result[model.TableSchema] {
 	res := model.TableSchema{}
 
 	for k, v := range e {
+		fieldNameResult := k.ToModel()
+
+		if fieldNameResult.IsErr() {
+			err := fieldNameResult.UnwrapErr()
+			return result.Err[model.TableSchema](fmt.Errorf("error with field name: %w", err))
+		}
+
 		fieldDefinitionResult := v.ToModel()
 
 		if fieldDefinitionResult.IsErr() {
@@ -86,7 +103,7 @@ func (e TableSchemaDto) ToModel() result.Result[model.TableSchema] {
 			return result.Err[model.TableSchema](fmt.Errorf("error with field definition: %w", err))
 		}
 
-		res[k] = fieldDefinitionResult.Unwrap()
+		res[fieldNameResult.Unwrap()] = fieldDefinitionResult.Unwrap()
 	}
 
 	return result.Ok(res)
@@ -96,9 +113,10 @@ func GetTableSchemaDto(schema model.TableSchema) TableSchemaDto {
 	result := TableSchemaDto{}
 
 	for k, v := range schema {
+		fieldName := GetFieldNameDto(k)
 		fieldDefinitionDto := GetFieldDefinitionDto(v)
 
-		result[k] = fieldDefinitionDto
+		result[fieldName] = fieldDefinitionDto
 	}
 
 	return result

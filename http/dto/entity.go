@@ -32,12 +32,19 @@ func FieldDtoToModel(f FieldDto) result.Result[model.Field] {
 	return result.Ok(model.Field(any(f)))
 }
 
-type EntityDto map[string]FieldDto
+type EntityDto map[FieldNameDto]FieldDto
 
 func (e EntityDto) ToModel() result.Result[model.Entity] {
 	res := model.Entity{}
 
 	for k, v := range e {
+		fieldNameResult := k.ToModel()
+
+		if fieldNameResult.IsErr() {
+			err := fieldNameResult.UnwrapErr()
+			return result.Err[model.Entity](fmt.Errorf("error parsing field name: %w", err))
+		}
+
 		fieldResult := FieldDtoToModel(v)
 
 		if fieldResult.IsErr() {
@@ -45,7 +52,7 @@ func (e EntityDto) ToModel() result.Result[model.Entity] {
 			return result.Err[model.Entity](fmt.Errorf("error parsing field: %w", err))
 		}
 
-		res[k] = fieldResult.Unwrap()
+		res[fieldNameResult.Unwrap()] = fieldResult.Unwrap()
 	}
 
 	return result.Ok(res)
@@ -55,8 +62,9 @@ func GetEntityDto(entity model.Entity) EntityDto {
 	result := EntityDto{}
 
 	for k, v := range entity {
+		fieldNameDto := GetFieldNameDto(k)
 		fieldDto := GetFieldDto(v)
-		result[k] = fieldDto
+		result[fieldNameDto] = fieldDto
 	}
 
 	return result
@@ -74,12 +82,19 @@ func GetEntitiesDto(entities model.Entities) EntitiesDto {
 	return result
 }
 
-type PartialEntityDto map[string]FieldDto
+type PartialEntityDto map[FieldNameDto]FieldDto
 
 func (p PartialEntityDto) ToModel() result.Result[model.PartialEntity] {
 	res := model.PartialEntity{}
 
 	for k, v := range p {
+		fieldNameResult := k.ToModel()
+
+		if fieldNameResult.IsErr() {
+			err := fieldNameResult.UnwrapErr()
+			return result.Err[model.PartialEntity](fmt.Errorf("error parsing field name: %w", err))
+		}
+
 		fieldResult := FieldDtoToModel(v)
 
 		if fieldResult.IsErr() {
@@ -87,7 +102,7 @@ func (p PartialEntityDto) ToModel() result.Result[model.PartialEntity] {
 			return result.Err[model.PartialEntity](fmt.Errorf("error parsing field: %w", err))
 		}
 
-		res[k] = fieldResult.Unwrap()
+		res[fieldNameResult.Unwrap()] = fieldResult.Unwrap()
 	}
 
 	return result.Ok(res)

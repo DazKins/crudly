@@ -62,7 +62,7 @@ func getPostgresCreateEntityQuery(
 	keys := util.GetMapKeys(entity)
 
 	for _, k := range keys {
-		query = query + k + ","
+		query = query + k.String() + ","
 	}
 
 	query += "id) VALUES ("

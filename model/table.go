@@ -33,16 +33,22 @@ func (f FieldType) String() string {
 	panic("invalid field type has entered the system in stringify!")
 }
 
-type TableName string
-
-func (t TableName) String() string {
-	return string(t)
-}
-
 type FieldDefinition struct {
 	Type       FieldType
 	Values     optional.Optional[[]string]
 	PrimaryKey bool
 }
 
-type TableSchema map[string]FieldDefinition
+type FieldName string
+
+func (f FieldName) String() string {
+	return string(f)
+}
+
+type TableSchema map[FieldName]FieldDefinition
+
+type TableName string
+
+func (t TableName) String() string {
+	return string(t)
+}

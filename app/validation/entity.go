@@ -44,7 +44,7 @@ const TimeFormat = "2006-01-02T15:04:05Z"
 
 func validateField(
 	entity model.Entity,
-	fieldName string,
+	fieldName model.FieldName,
 	fieldDefinition model.FieldDefinition,
 ) error {
 	field, ok := entity[fieldName]

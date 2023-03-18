@@ -74,7 +74,7 @@ func isValidFieldFilter(fieldType model.FieldType, fieldFilterType model.FieldFi
 }
 
 func validateFieldFilter(
-	fieldName string,
+	fieldName model.FieldName,
 	entityFilter model.EntityFilter,
 	fieldDefinition model.FieldDefinition,
 ) error {

@@ -97,8 +97,8 @@ func getPostgresTableCreationQuery(
 	return query
 }
 
-func getPostgresFieldQuery(key string, fieldDefinition model.FieldDefinition) string {
-	fieldQuery := key + " " + getPostgresDatatype(fieldDefinition.Type)
+func getPostgresFieldQuery(key model.FieldName, fieldDefinition model.FieldDefinition) string {
+	fieldQuery := key.String() + " " + getPostgresDatatype(fieldDefinition.Type)
 
 	if fieldDefinition.PrimaryKey {
 		fieldQuery += " PRIMARY KEY"

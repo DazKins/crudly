@@ -35,7 +35,7 @@ func (p partialEntityValidator) ValidatePartialEntity(partialEntity model.Partia
 
 func validatePartialField(
 	partialEntity model.PartialEntity,
-	fieldName string,
+	fieldName model.FieldName,
 	fieldDefinition model.FieldDefinition,
 ) error {
 	field := partialEntity[fieldName]

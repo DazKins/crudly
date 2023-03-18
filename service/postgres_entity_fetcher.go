@@ -62,9 +62,11 @@ func (p postgresEntityFetcher) FetchEntity(
 		str := *(column.(*string))
 		columnType := *columnTypes[i]
 
-		fieldDefinition := tableSchema[columnType.Name()]
+		fieldName := model.FieldName(columnType.Name())
 
-		entity[columnType.Name()] = parsePostgresFieldString(str, fieldDefinition.Type)
+		fieldDefinition := tableSchema[fieldName]
+
+		entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
 	}
 
 	if err != nil {
@@ -114,9 +116,11 @@ func (p postgresEntityFetcher) FetchEntities(
 			str := *(column.(*string))
 			columnType := *columnTypes[i]
 
-			fieldDefinition := tableSchema[columnType.Name()]
+			fieldName := model.FieldName(columnType.Name())
 
-			entity[columnType.Name()] = parsePostgresFieldString(str, fieldDefinition.Type)
+			fieldDefinition := tableSchema[fieldName]
+
+			entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
 		}
 
 		if err != nil {

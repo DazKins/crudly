@@ -31,4 +31,4 @@ type FieldFilter struct {
 	Comparator interface{}
 }
 
-type EntityFilter map[string]FieldFilter
+type EntityFilter map[FieldName]FieldFilter

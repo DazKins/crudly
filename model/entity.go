@@ -10,8 +10,8 @@ func (e EntityId) String() string {
 
 type Field any
 
-type Entity map[string]Field
+type Entity map[FieldName]Field
 
 type Entities []Entity
 
-type PartialEntity map[string]Field
+type PartialEntity map[FieldName]Field
