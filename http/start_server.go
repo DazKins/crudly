@@ -30,6 +30,7 @@ type entityManager interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entityFilter model.EntityFilter,
+		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
 	) result.Result[model.Entities]
 	CreateEntityWithId(

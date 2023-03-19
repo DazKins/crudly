@@ -25,6 +25,7 @@ type entityGetter interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entityFilter model.EntityFilter,
+		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
 	) result.Result[model.Entities]
 }
@@ -177,10 +178,22 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	entityOrderResult := dto.GetEntityOrderFromQuery(r.URL.Query())
+
+	if entityOrderResult.IsErr() {
+		err := entityOrderResult.UnwrapErr()
+
+		middleware.AttachError(w, err)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	entitiesResult := e.entityGetter.GetEntities(
 		projectId,
 		tableName,
 		entityFilterResult.Unwrap(),
+		entityOrderResult.Unwrap(),
 		paginationParams,
 	)
 

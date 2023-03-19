@@ -35,6 +35,7 @@ func main() {
 	entityValidator := validation.NewEntityValidator()
 	partialEntityValidator := validation.NewPartialEntityValidator()
 	entityFilterValidator := validation.NewEntityFilterValidator()
+	entityOrderValidator := validation.NewEntityOrderValidator()
 	tableSchemaValidator := validation.NewTableSchemaValidator()
 
 	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
@@ -53,6 +54,7 @@ func main() {
 		entityValidator,
 		partialEntityValidator,
 		entityFilterValidator,
+		entityOrderValidator,
 	)
 
 	http.StartServer(

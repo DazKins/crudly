@@ -246,9 +246,9 @@ func getPostgresComparator(fieldFilterType model.FieldFilterType) string {
 
 func getPostgresOrder(orderType model.FieldOrderType) string {
 	switch orderType {
-	case model.OrderTypeAscending:
+	case model.FieldOrderTypeAscending:
 		return "ASC"
-	case model.OrderTypeDescending:
+	case model.FieldOrderTypeDescending:
 		return "DESC"
 	}
 	panic(fmt.Sprintf("invalid field order type has entered the system: %v", orderType))

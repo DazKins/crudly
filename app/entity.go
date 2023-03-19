@@ -72,6 +72,13 @@ type entityFilterValidator interface {
 	) error
 }
 
+type entityOrderValidator interface {
+	ValidateEntityOrder(
+		entityOrder model.EntityOrder,
+		tableSchema model.TableSchema,
+	) error
+}
+
 type entityManager struct {
 	entityFetcher          entityFetcher
 	entityCreator          entityCreator
@@ -81,6 +88,7 @@ type entityManager struct {
 	entityValidator        entityValidator
 	partialEntityValidator partialEntityValidator
 	entityFilterValidator  entityFilterValidator
+	entityOrderValidator   entityOrderValidator
 }
 
 func NewEntityManager(
@@ -92,6 +100,7 @@ func NewEntityManager(
 	entityValidator entityValidator,
 	partialEntityValidator partialEntityValidator,
 	entityFilterValidator entityFilterValidator,
+	entityOrderValidator entityOrderValidator,
 ) entityManager {
 	return entityManager{
 		entityFetcher,
@@ -102,6 +111,7 @@ func NewEntityManager(
 		entityValidator,
 		partialEntityValidator,
 		entityFilterValidator,
+		entityOrderValidator,
 	}
 }
 
@@ -138,6 +148,7 @@ func (e entityManager) GetEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entityFilter model.EntityFilter,
+	entityOrder model.EntityOrder,
 	paginationParams model.PaginationParams,
 ) result.Result[model.Entities] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
@@ -154,12 +165,18 @@ func (e entityManager) GetEntities(
 		return result.Err[model.Entities](errs.NewInvalidEntityFilterError(err))
 	}
 
+	err = e.entityOrderValidator.ValidateEntityOrder(entityOrder, tableSchema)
+
+	if err != nil {
+		return result.Err[model.Entities](errs.NewInvalidEntityOrderError(err))
+	}
+
 	return e.entityFetcher.FetchEntities(
 		projectId,
 		tableName,
 		tableSchema,
 		entityFilter,
-		model.EntityOrder{},
+		entityOrder,
 		paginationParams,
 	)
 }
