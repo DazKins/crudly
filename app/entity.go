@@ -22,6 +22,7 @@ type entityFetcher interface {
 		table model.TableName,
 		tableSchema model.TableSchema,
 		entityFilter model.EntityFilter,
+		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
 	) result.Result[model.Entities]
 }
@@ -158,6 +159,7 @@ func (e entityManager) GetEntities(
 		tableName,
 		tableSchema,
 		entityFilter,
+		model.EntityOrder{},
 		paginationParams,
 	)
 }

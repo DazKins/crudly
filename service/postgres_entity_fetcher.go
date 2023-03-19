@@ -81,12 +81,14 @@ func (p postgresEntityFetcher) FetchEntities(
 	tableName model.TableName,
 	tableSchema model.TableSchema,
 	entityFilter model.EntityFilter,
+	entityOrder model.EntityOrder,
 	paginationParams model.PaginationParams,
 ) result.Result[model.Entities] {
 	query := getPostgresEntitiesQuery(
 		projectId,
 		tableName,
 		entityFilter,
+		entityOrder,
 		paginationParams,
 	)
 
@@ -181,6 +183,7 @@ func getPostgresEntitiesQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entityFilter model.EntityFilter,
+	entityOrder model.EntityOrder,
 	paginationParams model.PaginationParams,
 ) string {
 
@@ -203,6 +206,22 @@ func getPostgresEntitiesQuery(
 		query += " WHERE " + filters
 	}
 
+	if len(entityOrder) != 0 {
+		orders := ""
+
+		for fieldName, orderType := range entityOrder {
+			orders += fmt.Sprintf(
+				"%s %s,",
+				fieldName.String(),
+				getPostgresOrder(orderType),
+			)
+		}
+
+		orders = strings.TrimSuffix(orders, ",")
+
+		query += " ORDER BY " + orders + " "
+	}
+
 	query += " LIMIT " + paginationParams.Limit.String() +
 		" OFFSET " + paginationParams.Offset.String()
 
@@ -223,4 +242,14 @@ func getPostgresComparator(fieldFilterType model.FieldFilterType) string {
 		return "<="
 	}
 	panic(fmt.Sprintf("invalid field filter type has entered the system: %v", fieldFilterType))
+}
+
+func getPostgresOrder(orderType model.FieldOrderType) string {
+	switch orderType {
+	case model.OrderTypeAscending:
+		return "ASC"
+	case model.OrderTypeDescending:
+		return "DESC"
+	}
+	panic(fmt.Sprintf("invalid field order type has entered the system: %v", orderType))
 }
