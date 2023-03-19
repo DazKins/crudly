@@ -26,7 +26,7 @@ func (e entityOrderValidator) ValidateEntityOrder(
 
 		if !isValidFieldOrder(fieldDefinition.Type, fieldOrder) {
 			return fmt.Errorf(
-				"filter: \"%s\" is not valid for field type \"%s\"",
+				"order: \"%s\" is not valid for field type \"%s\"",
 				fieldOrder.String(),
 				fieldDefinition.Type.String(),
 			)

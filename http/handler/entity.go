@@ -208,6 +208,12 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if invalidEntityOrderError, ok := err.(errs.InvalidEntityOrderError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(invalidEntityOrderError.Error()))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error getting entities"))
 		return
