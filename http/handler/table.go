@@ -25,6 +25,7 @@ type tableCreator interface {
 
 type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
+	GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas]
 }
 
 type tableDeleter interface {
@@ -141,6 +142,28 @@ func (t tableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	tableSchemaDto := dto.GetTableSchemaDto(tableSchemaResult.Unwrap())
 
 	resBodyBytes, _ := json.Marshal(tableSchemaDto)
+
+	w.Header().Set("content-type", "application/json")
+	w.Write(resBodyBytes)
+}
+
+func (t tableHandler) GetTables(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+
+	tableSchemasResult := t.tableSchemaGetter.GetTableSchemas(projectId)
+
+	if tableSchemasResult.IsErr() {
+		err := tableSchemasResult.UnwrapErr()
+		middleware.AttachError(w, err)
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting table"))
+		return
+	}
+
+	tableSchemasDto := dto.GetTableSchemasDto(tableSchemasResult.Unwrap())
+
+	resBodyBytes, _ := json.Marshal(tableSchemasDto)
 
 	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)

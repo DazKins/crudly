@@ -20,6 +20,10 @@ type tableSchemaFetcher interface {
 		projectId model.ProjectId,
 		name model.TableName,
 	) result.R[model.TableSchema]
+
+	FetchTableSchemas(
+		projectId model.ProjectId,
+	) result.R[model.TableSchemas]
 }
 
 type tableDeleter interface {
@@ -72,6 +76,16 @@ func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.Table
 	delete(tableSchema, "id")
 
 	return result.Ok(tableSchema)
+}
+
+func (t tableManager) GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas] {
+	tableSchemasResult := t.tableSchemaFetcher.FetchTableSchemas(projectId)
+
+	if tableSchemasResult.IsErr() {
+		return result.Errf[model.TableSchemas]("error fetching table schemas: %w", tableSchemasResult.UnwrapErr())
+	}
+
+	return result.Ok(tableSchemasResult.Unwrap())
 }
 
 func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error {

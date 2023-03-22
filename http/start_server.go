@@ -21,6 +21,7 @@ type projectManager interface {
 type tableManager interface {
 	CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
+	GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas]
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
 }
 
@@ -105,6 +106,11 @@ func createHandler(
 		"/{tableName}",
 		tableHandler.PutTable,
 	).Methods("PUT")
+
+	tableRouter.HandleFunc(
+		"",
+		tableHandler.GetTables,
+	).Methods("GET")
 
 	tableRouter.HandleFunc(
 		"/{tableName}",

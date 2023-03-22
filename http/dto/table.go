@@ -128,3 +128,19 @@ func (t TableNameDto) ToModel() result.R[model.TableName] {
 	tableName := model.TableName(string(t))
 	return result.Ok(tableName)
 }
+
+func GetTableNameDto(tableName model.TableName) TableNameDto {
+	return TableNameDto(string(tableName))
+}
+
+type TableSchemasDto map[TableNameDto]TableSchemaDto
+
+func GetTableSchemasDto(tableSchemas model.TableSchemas) TableSchemasDto {
+	result := TableSchemasDto{}
+
+	for tableName, tableSchema := range tableSchemas {
+		result[GetTableNameDto(tableName)] = GetTableSchemaDto(tableSchema)
+	}
+
+	return result
+}
