@@ -9,7 +9,7 @@ import (
 
 type PaginationLimitPathParam string
 
-func (p PaginationLimitPathParam) ToModel() result.Result[model.PaginationLimit] {
+func (p PaginationLimitPathParam) ToModel() result.R[model.PaginationLimit] {
 	limit, err := strconv.Atoi(string(p))
 
 	if err != nil {
@@ -25,7 +25,7 @@ func (p PaginationLimitPathParam) ToModel() result.Result[model.PaginationLimit]
 
 type PaginationOffsetPathParam string
 
-func (p PaginationOffsetPathParam) ToModel() result.Result[model.PaginationOffset] {
+func (p PaginationOffsetPathParam) ToModel() result.R[model.PaginationOffset] {
 	offset, err := strconv.Atoi(string(p))
 
 	if err != nil {

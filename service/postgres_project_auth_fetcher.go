@@ -18,7 +18,7 @@ func NewPostgresProjectAuthFetcher(postgres *sql.DB) postgresProjectAuthFetcher 
 	}
 }
 
-func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo] {
+func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo] {
 	query := getPostgresFetchProjectAuthQuery(id)
 
 	rows, err := p.postgres.Query(query)

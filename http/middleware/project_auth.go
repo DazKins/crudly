@@ -11,7 +11,7 @@ import (
 )
 
 type projectAuthInfoGetter interface {
-	GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
+	GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo]
 }
 
 func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) mux.MiddlewareFunc {

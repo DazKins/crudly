@@ -15,7 +15,7 @@ type projectCreator interface {
 }
 
 type projectAuthInfoFetcher interface {
-	FetchProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
+	FetchProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo]
 }
 
 type projectManager struct {
@@ -30,11 +30,11 @@ func NewProjectManager(projectCreator projectCreator, projectAuthInfoFetcher pro
 	}
 }
 
-func (p projectManager) GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo] {
+func (p projectManager) GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo] {
 	return p.projectAuthInfoFetcher.FetchProjectAuthInfo(id)
 }
 
-func (p projectManager) CreateProject() result.Result[model.CreateProjectResponse] {
+func (p projectManager) CreateProject() result.R[model.CreateProjectResponse] {
 	id := model.ProjectId(uuid.New())
 
 	key := generateKey()

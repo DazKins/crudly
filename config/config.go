@@ -33,7 +33,7 @@ func InitialiseConfg() Config {
 	}
 }
 
-func getUint(env string) result.Result[uint] {
+func getUint(env string) result.R[uint] {
 	numResult := getInt(env)
 
 	if numResult.IsErr() {
@@ -49,7 +49,7 @@ func getUint(env string) result.Result[uint] {
 	return result.Ok(uint(num))
 }
 
-func getInt(env string) result.Result[int] {
+func getInt(env string) result.R[int] {
 	envResult := getEnv(env)
 
 	if envResult.IsErr() {
@@ -65,7 +65,7 @@ func getInt(env string) result.Result[int] {
 	return result.Ok(num)
 }
 
-func getEnv(env string) result.Result[string] {
+func getEnv(env string) result.R[string] {
 	envVar, present := os.LookupEnv(env)
 
 	if !present {

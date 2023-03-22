@@ -7,6 +7,7 @@ import (
 	"crudly/util/result"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,6 +52,39 @@ func (p postgresEntityCreator) CreateEntity(
 	return nil
 }
 
+func (p postgresEntityCreator) CreateEntities(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	ids []model.EntityId,
+	entities model.Entities,
+) error {
+	createEntityQueries := make([]string, len(entities))
+
+	for index, entity := range entities {
+		query := getPostgresCreateEntityQuery(
+			projectId,
+			tableName,
+			ids[index],
+			entity,
+		)
+
+		createEntityQueries[index] = query
+	}
+
+	createEntitiesQuery := fmt.Sprintf(
+		"BEGIN; %s; COMMIT;",
+		strings.Join(createEntityQueries, "; "),
+	)
+
+	_, err := p.postgres.Query(createEntitiesQuery)
+
+	if err != nil {
+		return fmt.Errorf("error querying postgres: %w", err)
+	}
+
+	return nil
+}
+
 func getPostgresCreateEntityQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
@@ -83,7 +117,7 @@ func getPostgresCreateEntityQuery(
 
 const PostgresTimeFormat = "2006-01-02T15:04:05Z"
 
-func getPostgresFieldValue(field any) result.Result[string] {
+func getPostgresFieldValue(field any) result.R[string] {
 	switch v := field.(type) {
 	case uuid.UUID:
 		return result.Ok("'" + v.String() + "'")

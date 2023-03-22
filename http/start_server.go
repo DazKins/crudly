@@ -14,25 +14,25 @@ import (
 )
 
 type projectManager interface {
-	CreateProject() result.Result[model.CreateProjectResponse]
-	GetProjectAuthInfo(id model.ProjectId) result.Result[model.ProjectAuthInfo]
+	CreateProject() result.R[model.CreateProjectResponse]
+	GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo]
 }
 
 type tableManager interface {
 	CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error
-	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
 }
 
 type entityManager interface {
-	GetEntity(projectId model.ProjectId, tableName model.TableName, id model.EntityId) result.Result[model.Entity]
+	GetEntity(projectId model.ProjectId, tableName model.TableName, id model.EntityId) result.R[model.Entity]
 	GetEntities(
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entityFilter model.EntityFilter,
 		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
-	) result.Result[model.Entities]
+	) result.R[model.Entities]
 	CreateEntityWithId(
 		projectId model.ProjectId,
 		tableName model.TableName,
@@ -43,6 +43,11 @@ type entityManager interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entity model.Entity,
+	) error
+	CreateEntities(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entities model.Entities,
 	) error
 	UpdateEntity(
 		projectId model.ProjectId,
@@ -141,6 +146,11 @@ func createHandler(
 	entityRouter.HandleFunc(
 		"",
 		entityHandler.PostEntity,
+	).Methods("POST")
+
+	entityRouter.HandleFunc(
+		"/batch",
+		entityHandler.PostEntityBatch,
 	).Methods("POST")
 
 	return router

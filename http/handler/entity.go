@@ -19,7 +19,7 @@ type entityGetter interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		id model.EntityId,
-	) result.Result[model.Entity]
+	) result.R[model.Entity]
 
 	GetEntities(
 		projectId model.ProjectId,
@@ -27,7 +27,7 @@ type entityGetter interface {
 		entityFilter model.EntityFilter,
 		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
-	) result.Result[model.Entities]
+	) result.R[model.Entities]
 }
 
 type entityCreator interface {
@@ -42,6 +42,12 @@ type entityCreator interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entity model.Entity,
+	) error
+
+	CreateEntities(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entities model.Entities,
 	) error
 }
 
@@ -316,6 +322,49 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 		projectId,
 		tableName,
 		entityResult.Unwrap(),
+	)
+
+	if err != nil {
+		middleware.AttachError(w, err)
+
+		if err, ok := err.(errs.InvalidEntityError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating entity"))
+		return
+	}
+}
+
+func (e entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
+
+	bodyBytes, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		panic("error reading body")
+	}
+
+	var entitiesDto dto.EntitiesDto
+	json.Unmarshal(bodyBytes, &entitiesDto)
+
+	entitiesResult := entitiesDto.ToModel()
+
+	if entitiesResult.IsErr() {
+		middleware.AttachError(w, entitiesResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid entities array"))
+		return
+	}
+
+	err = e.entityCreator.CreateEntities(
+		projectId,
+		tableName,
+		entitiesResult.Unwrap(),
 	)
 
 	if err != nil {

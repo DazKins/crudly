@@ -19,7 +19,7 @@ type tableSchemaFetcher interface {
 	FetchTableSchema(
 		projectId model.ProjectId,
 		name model.TableName,
-	) result.Result[model.TableSchema]
+	) result.R[model.TableSchema]
 }
 
 type tableDeleter interface {
@@ -54,7 +54,7 @@ func NewTableManager(
 	}
 }
 
-func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema] {
+func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema] {
 	tableSchemaResult := t.tableSchemaFetcher.FetchTableSchema(projectId, name)
 
 	if tableSchemaResult.IsErr() {

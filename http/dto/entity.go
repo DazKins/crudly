@@ -11,7 +11,7 @@ import (
 
 type EntityIdDto string
 
-func (e EntityIdDto) ToModel() result.Result[model.EntityId] {
+func (e EntityIdDto) ToModel() result.R[model.EntityId] {
 	uuid, err := uuid.Parse(string(e))
 
 	if err != nil {
@@ -28,13 +28,13 @@ func GetFieldDto(field model.Field) FieldDto {
 }
 
 // Can't be ToModel since interface{} can't be extended
-func FieldDtoToModel(f FieldDto) result.Result[model.Field] {
+func FieldDtoToModel(f FieldDto) result.R[model.Field] {
 	return result.Ok(model.Field(any(f)))
 }
 
 type EntityDto map[FieldNameDto]FieldDto
 
-func (e EntityDto) ToModel() result.Result[model.Entity] {
+func (e EntityDto) ToModel() result.R[model.Entity] {
 	res := model.Entity{}
 
 	for k, v := range e {
@@ -72,6 +72,28 @@ func GetEntityDto(entity model.Entity) EntityDto {
 
 type EntitiesDto []EntityDto
 
+func (e EntitiesDto) ToModel() result.R[model.Entities] {
+	entities := model.Entities{}
+
+	for index, entityDto := range e {
+		entityResult := entityDto.ToModel()
+
+		if entityResult.IsErr() {
+			err := entityResult.UnwrapErr()
+
+			return result.Errf[model.Entities](
+				"error parsing entity at index: %d, %w",
+				index,
+				err,
+			)
+		}
+
+		entities = append(entities, entityResult.Unwrap())
+	}
+
+	return result.Ok(entities)
+}
+
 func GetEntitiesDto(entities model.Entities) EntitiesDto {
 	result := EntitiesDto{}
 
@@ -84,7 +106,7 @@ func GetEntitiesDto(entities model.Entities) EntitiesDto {
 
 type PartialEntityDto map[FieldNameDto]FieldDto
 
-func (p PartialEntityDto) ToModel() result.Result[model.PartialEntity] {
+func (p PartialEntityDto) ToModel() result.R[model.PartialEntity] {
 	res := model.PartialEntity{}
 
 	for k, v := range p {

@@ -22,7 +22,7 @@ func NewPostgresTableFetcher(postgres *sql.DB) postgresTableFetcher {
 func (p postgresTableFetcher) FetchTableSchema(
 	projectId model.ProjectId,
 	name model.TableName,
-) result.Result[model.TableSchema] {
+) result.R[model.TableSchema] {
 	query := "SELECT schema " +
 		"FROM \"" + getPostgresSchemaTableName(projectId) + "\" " +
 		"WHERE name = '" + name.String() + "'"

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetEntityOrderFromQuery(query url.Values) result.Result[model.EntityOrder] {
+func GetEntityOrderFromQuery(query url.Values) result.R[model.EntityOrder] {
 	orderQueries := query["order"]
 
 	entityOrder := model.EntityOrder{}

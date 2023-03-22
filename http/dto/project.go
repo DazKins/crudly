@@ -14,7 +14,7 @@ func GetProjectIdDto(projectId model.ProjectId) ProjectIdDto {
 	return ProjectIdDto(uuid.UUID(projectId).String())
 }
 
-func (p ProjectIdDto) ToModel() result.Result[model.ProjectId] {
+func (p ProjectIdDto) ToModel() result.R[model.ProjectId] {
 	uuid, err := uuid.Parse(string(p))
 
 	if err != nil {

@@ -15,7 +15,7 @@ type entityFetcher interface {
 		tableName model.TableName,
 		tableSchema model.TableSchema,
 		id model.EntityId,
-	) result.Result[model.Entity]
+	) result.R[model.Entity]
 
 	FetchEntities(
 		projectId model.ProjectId,
@@ -24,7 +24,7 @@ type entityFetcher interface {
 		entityFilter model.EntityFilter,
 		entityOrder model.EntityOrder,
 		paginationParams model.PaginationParams,
-	) result.Result[model.Entities]
+	) result.R[model.Entities]
 }
 
 type entityCreator interface {
@@ -33,6 +33,13 @@ type entityCreator interface {
 		tableName model.TableName,
 		id model.EntityId,
 		entity model.Entity,
+	) error
+
+	CreateEntities(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		ids []model.EntityId,
+		entities model.Entities,
 	) error
 }
 
@@ -54,7 +61,7 @@ type entityDeleter interface {
 }
 
 type tableSchemaGetter interface {
-	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 }
 
 type entityValidator interface {
@@ -119,7 +126,7 @@ func (e entityManager) GetEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
-) result.Result[model.Entity] {
+) result.R[model.Entity] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
@@ -150,7 +157,7 @@ func (e entityManager) GetEntities(
 	entityFilter model.EntityFilter,
 	entityOrder model.EntityOrder,
 	paginationParams model.PaginationParams,
-) result.Result[model.Entities] {
+) result.R[model.Entities] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
@@ -232,6 +239,44 @@ func (e entityManager) CreateEntity(
 		id,
 		entity,
 	)
+}
+
+func (e entityManager) CreateEntities(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	entities model.Entities,
+) error {
+	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
+
+	if tableSchemaResult.IsErr() {
+		return fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr())
+	}
+
+	tableSchema := tableSchemaResult.Unwrap()
+
+	for index, entity := range entities {
+		err := e.entityValidator.ValidateEntity(entity, tableSchema)
+
+		if err != nil {
+			return errs.NewInvalidEntityError(
+				fmt.Errorf("error with entity at index %d: %w", index, err),
+			)
+		}
+	}
+
+	entityIds := make([]model.EntityId, len(entities))
+
+	for index := range entities {
+		entityIds[index] = model.EntityId(uuid.New())
+	}
+
+	err := e.entityCreator.CreateEntities(projectId, tableName, entityIds, entities)
+
+	if err != nil {
+		return fmt.Errorf("error creating entities: %w", err)
+	}
+
+	return nil
 }
 
 func (e entityManager) UpdateEntity(

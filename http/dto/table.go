@@ -10,7 +10,7 @@ import (
 
 type FieldTypeDto string
 
-func (t FieldTypeDto) ToModel() result.Result[model.FieldType] {
+func (t FieldTypeDto) ToModel() result.R[model.FieldType] {
 	switch strings.ToLower(string(t)) {
 	case "id":
 		return result.Ok(model.FieldTypeId)
@@ -51,7 +51,7 @@ type FieldDefinitionDto struct {
 	Values *[]string    `json:"values,omitempty"`
 }
 
-func (d FieldDefinitionDto) ToModel() result.Result[model.FieldDefinition] {
+func (d FieldDefinitionDto) ToModel() result.R[model.FieldDefinition] {
 	fieldTypeResult := d.Type.ToModel()
 
 	if fieldTypeResult.IsErr() {
@@ -75,7 +75,7 @@ func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 
 type FieldNameDto string
 
-func (f FieldNameDto) ToModel() result.Result[model.FieldName] {
+func (f FieldNameDto) ToModel() result.R[model.FieldName] {
 	return result.Ok(model.FieldName(string(f)))
 }
 
@@ -85,7 +85,7 @@ func GetFieldNameDto(f model.FieldName) FieldNameDto {
 
 type TableSchemaDto map[FieldNameDto]FieldDefinitionDto
 
-func (e TableSchemaDto) ToModel() result.Result[model.TableSchema] {
+func (e TableSchemaDto) ToModel() result.R[model.TableSchema] {
 	res := model.TableSchema{}
 
 	for k, v := range e {
@@ -124,7 +124,7 @@ func GetTableSchemaDto(schema model.TableSchema) TableSchemaDto {
 
 type TableNameDto string
 
-func (t TableNameDto) ToModel() result.Result[model.TableName] {
+func (t TableNameDto) ToModel() result.R[model.TableName] {
 	tableName := model.TableName(string(t))
 	return result.Ok(tableName)
 }

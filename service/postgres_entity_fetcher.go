@@ -28,7 +28,7 @@ func (p postgresEntityFetcher) FetchEntity(
 	tableName model.TableName,
 	tableSchema model.TableSchema,
 	id model.EntityId,
-) result.Result[model.Entity] {
+) result.R[model.Entity] {
 	query := getPostgresEntityQuery(
 		projectId,
 		tableName,
@@ -83,7 +83,7 @@ func (p postgresEntityFetcher) FetchEntities(
 	entityFilter model.EntityFilter,
 	entityOrder model.EntityOrder,
 	paginationParams model.PaginationParams,
-) result.Result[model.Entities] {
+) result.R[model.Entities] {
 	query := getPostgresEntitiesQuery(
 		projectId,
 		tableName,

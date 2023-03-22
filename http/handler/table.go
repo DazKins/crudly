@@ -24,7 +24,7 @@ type tableCreator interface {
 }
 
 type tableSchemaGetter interface {
-	GetTableSchema(projectId model.ProjectId, name model.TableName) result.Result[model.TableSchema]
+	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 }
 
 type tableDeleter interface {

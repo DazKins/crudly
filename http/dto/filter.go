@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetEntityFilterFromQuery(query url.Values) result.Result[model.EntityFilter] {
+func GetEntityFilterFromQuery(query url.Values) result.R[model.EntityFilter] {
 	filterQuery := query["filter"]
 
 	entityFilter := model.EntityFilter{}
@@ -48,7 +48,7 @@ func GetEntityFilterFromQuery(query url.Values) result.Result[model.EntityFilter
 	return result.Ok(entityFilter)
 }
 
-func getFieldFilterTypeFromQuery(filterTypeQuery string) result.Result[model.FieldFilterType] {
+func getFieldFilterTypeFromQuery(filterTypeQuery string) result.R[model.FieldFilterType] {
 	if strings.Contains(filterTypeQuery, ">=") {
 		return result.Ok(model.FieldFilterTypeGreaterThanEq)
 	}

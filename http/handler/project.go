@@ -11,7 +11,7 @@ import (
 )
 
 type projectCreator interface {
-	CreateProject() result.Result[model.CreateProjectResponse]
+	CreateProject() result.R[model.CreateProjectResponse]
 }
 
 type projectHandler struct {
