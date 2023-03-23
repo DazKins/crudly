@@ -1,13 +1,13 @@
 package service
 
 import (
+	"context"
 	"crudly/errs"
 	"crudly/model"
 	"crudly/util"
 	"crudly/util/result"
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,7 +58,12 @@ func (p postgresEntityCreator) CreateEntities(
 	ids []model.EntityId,
 	entities model.Entities,
 ) error {
-	createEntityQueries := make([]string, len(entities))
+	tx, err := p.postgres.BeginTx(context.Background(), nil)
+
+	if err != nil {
+		return fmt.Errorf("error opening postgres transaction: %w", err)
+	}
+	defer tx.Rollback()
 
 	for index, entity := range entities {
 		query := getPostgresCreateEntityQuery(
@@ -68,18 +73,17 @@ func (p postgresEntityCreator) CreateEntities(
 			entity,
 		)
 
-		createEntityQueries[index] = query
+		_, err := tx.Query(query)
+
+		if err != nil {
+			return fmt.Errorf("error querying postgres: %w", err)
+		}
 	}
 
-	createEntitiesQuery := fmt.Sprintf(
-		"BEGIN; %s; COMMIT;",
-		strings.Join(createEntityQueries, "; "),
-	)
-
-	_, err := p.postgres.Query(createEntitiesQuery)
+	err = tx.Commit()
 
 	if err != nil {
-		return fmt.Errorf("error querying postgres: %w", err)
+		return fmt.Errorf("error commiting postgres transaction: %w", err)
 	}
 
 	return nil

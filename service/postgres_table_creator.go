@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crudly/model"
 	"database/sql"
 	"encoding/json"
@@ -23,20 +24,23 @@ func (p postgresTableCreator) CreateTable(
 	name model.TableName,
 	schema model.TableSchema,
 ) error {
+	tx, err := p.postgres.BeginTx(context.Background(), nil)
+
+	if err != nil {
+		return fmt.Errorf("error opening postgres transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	tableCreationQuery := getPostgresTableCreationQuery(
 		projectId,
 		name,
 		schema,
 	)
 
-	res, err := p.postgres.Exec(tableCreationQuery)
+	_, err = tx.Exec(tableCreationQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating postgres table: %w", err)
-	}
-
-	if res == nil {
-		return fmt.Errorf("table %s already exists", name)
 	}
 
 	schemaCreationQuery := getPostgresTableSchemaCreationQuery(
@@ -45,14 +49,16 @@ func (p postgresTableCreator) CreateTable(
 		schema,
 	)
 
-	res, err = p.postgres.Exec(schemaCreationQuery)
+	_, err = tx.Exec(schemaCreationQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating postgres table: %w", err)
 	}
 
-	if res == nil {
-		return fmt.Errorf("table %s already exists", name)
+	err = tx.Commit()
+
+	if err != nil {
+		return fmt.Errorf("error commiting postgres transaction: %w", err)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crudly/model"
 	"database/sql"
 	"fmt"
@@ -17,20 +18,32 @@ func NewPostgresTableDeleter(postgres *sql.DB) postgresTableDeleter {
 }
 
 func (p postgresTableDeleter) DeleteTable(projectId model.ProjectId, name model.TableName) error {
-	deleteSchemaQuery := getPostgresSchemaDeletionQuery(projectId, name)
-
-	_, err := p.postgres.Exec(deleteSchemaQuery)
+	tx, err := p.postgres.BeginTx(context.Background(), nil)
 
 	if err != nil {
-		return fmt.Errorf("error delete schema from postgres: %w", err)
+		return fmt.Errorf("error opening postgres transaction: %w", err)
+	}
+	defer tx.Rollback()
+	deleteSchemaQuery := getPostgresSchemaDeletionQuery(projectId, name)
+
+	_, err = tx.Exec(deleteSchemaQuery)
+
+	if err != nil {
+		return fmt.Errorf("error querying postgres: %w", err)
 	}
 
 	deleteTableQuery := getPostgresDeleteTableQuery(projectId, name)
 
-	_, err = p.postgres.Exec(deleteTableQuery)
+	_, err = tx.Exec(deleteTableQuery)
 
 	if err != nil {
-		return fmt.Errorf("error delete table from postgres: %w", err)
+		return fmt.Errorf("error querying postgres: %w", err)
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		return fmt.Errorf("error commiting postgres transaction: %w", err)
 	}
 
 	return nil
