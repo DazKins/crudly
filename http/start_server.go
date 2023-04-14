@@ -13,6 +13,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type userManager interface {
+	CreateUser(user model.User) result.R[model.UserId]
+	GetUser(id model.UserId) result.R[model.User]
+}
+
 type projectManager interface {
 	CreateProject() result.R[model.CreateProjectResponse]
 	GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo]
@@ -65,10 +70,12 @@ type entityManager interface {
 
 func createHandler(
 	config config.Config,
+	userManager userManager,
 	projectManager projectManager,
 	tableManager tableManager,
 	entityManager entityManager,
 ) http.Handler {
+	userHandler := handler.NewUserHandler(userManager)
 	projectHandler := handler.NewProjectHandler(config, projectManager)
 	tableHandler := handler.NewTableHandler(
 		tableManager,
@@ -89,6 +96,18 @@ func createHandler(
 
 	router := mux.NewRouter()
 	router.Use(loggerMiddleware)
+
+	userRouter := router.PathPrefix("/users").Subrouter()
+
+	userRouter.HandleFunc(
+		"",
+		userHandler.PostUser,
+	).Methods("POST")
+
+	userRouter.HandleFunc(
+		"/{id}",
+		userHandler.GetUser,
+	).Methods("GET")
 
 	projectRouter := router.PathPrefix("/projects").Subrouter()
 
@@ -164,12 +183,14 @@ func createHandler(
 
 func StartServer(
 	config config.Config,
+	userManager userManager,
 	projectManager projectManager,
 	tableManager tableManager,
 	entityManager entityManager,
 ) {
 	handler := createHandler(
 		config,
+		userManager,
 		projectManager,
 		tableManager,
 		entityManager,

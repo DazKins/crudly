@@ -1,48 +1,50 @@
 package optional
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
-type Optional[T any] struct {
+type O[T any] struct {
 	value   T
 	present bool
 }
 
-func Some[T any](value T) Optional[T] {
-	return Optional[T]{
+func Some[T any](value T) O[T] {
+	return O[T]{
 		value:   value,
 		present: true,
 	}
 }
 
-func None[T any]() Optional[T] {
-	return Optional[T]{
+func None[T any]() O[T] {
+	return O[T]{
 		present: false,
 	}
 }
 
-func (o Optional[T]) IsNone() bool {
+func (o O[T]) IsNone() bool {
 	return !o.IsSome()
 }
 
-func (o Optional[T]) IsSome() bool {
+func (o O[T]) IsSome() bool {
 	return o.present
 }
 
-func (o Optional[T]) Unwrap() T {
+func (o O[T]) Unwrap() T {
 	if !o.present {
 		panic("optional.unwrap called on None")
 	}
 	return o.value
 }
 
-func FromPointer[T any](p *T) Optional[T] {
+func FromPointer[T any](p *T) O[T] {
 	if p == nil {
 		return None[T]()
 	}
 	return Some(*p)
 }
 
-func ToPointer[T any](o Optional[T]) *T {
+func (o O[T]) ToPointer() *T {
 	var res *T
 
 	if o.IsSome() {
@@ -53,21 +55,16 @@ func ToPointer[T any](o Optional[T]) *T {
 	return res
 }
 
-func (s Optional[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Value   T
-		Present bool
-	}{
-		Value:   s.value,
-		Present: s.present,
-	})
+func (s O[T]) MarshalJSON() ([]byte, error) {
+	if s.IsNone() {
+		return json.Marshal(nil)
+	} else {
+		return json.Marshal(s.value)
+	}
 }
 
-func (s *Optional[T]) UnmarshalJSON(bytes []byte) error {
-	recv := new(struct {
-		Value   T
-		Present bool
-	})
+func (s *O[T]) UnmarshalJSON(bytes []byte) error {
+	recv := new(T)
 
 	err := json.Unmarshal(bytes, &recv)
 
@@ -75,8 +72,13 @@ func (s *Optional[T]) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 
-	s.value = recv.Value
-	s.present = recv.Present
+	if recv == nil {
+		s.value = *new(T)
+		s.present = false
+	} else {
+		s.value = *recv
+		s.present = true
+	}
 
 	return nil
 }

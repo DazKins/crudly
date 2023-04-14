@@ -69,7 +69,7 @@ func (d FieldDefinitionDto) ToModel() result.R[model.FieldDefinition] {
 func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 	return FieldDefinitionDto{
 		Type:   GetFieldTypeDto(d.Type),
-		Values: optional.ToPointer(d.Values),
+		Values: d.Values.ToPointer(),
 	}
 }
 

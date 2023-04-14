@@ -35,7 +35,7 @@ func (f FieldType) String() string {
 
 type FieldDefinition struct {
 	Type       FieldType
-	Values     optional.Optional[[]string]
+	Values     optional.O[[]string]
 	PrimaryKey bool
 }
 
