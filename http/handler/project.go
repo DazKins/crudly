@@ -27,12 +27,6 @@ func NewProjectHandler(config config.Config, projectCreator projectCreator) proj
 }
 
 func (p projectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("x-api-key") != p.config.ProjectCreationApiKey {
-		w.WriteHeader(401)
-		w.Write([]byte("incorrect api key"))
-		return
-	}
-
 	createProjectResult := p.projectCreator.CreateProject()
 
 	if createProjectResult.IsErr() {

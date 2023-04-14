@@ -17,7 +17,18 @@ type projectAuthInfoGetter interface {
 func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			projectId := r.Context().Value(ctx.ProjectIdContextKey).(model.ProjectId)
+			if r.Context().Value(AdminContextKey) != nil {
+				h.ServeHTTP(w, r)
+				return
+			}
+
+			projectId, ok := r.Context().Value(ctx.ProjectIdContextKey).(model.ProjectId)
+
+			if !ok {
+				w.WriteHeader(400)
+				w.Write([]byte("project id header is not present"))
+				return
+			}
 
 			authInfoResult := projectAuthInfoGetter.GetProjectAuthInfo(projectId)
 

@@ -89,6 +89,8 @@ func createHandler(
 		entityManager,
 	)
 
+	adminApiKeyMiddleware := middleware.NewAdminApiKey(config)
+	adminAuthMiddleware := middleware.NewAdminAuth()
 	tableNameMiddleware := middleware.NewTableName()
 	projectIdMiddleware := middleware.NewProjectId()
 	projectAuthMiddleware := middleware.NewProjectAuth(projectManager)
@@ -96,8 +98,10 @@ func createHandler(
 
 	router := mux.NewRouter()
 	router.Use(loggerMiddleware)
+	router.Use(adminApiKeyMiddleware)
 
 	userRouter := router.PathPrefix("/users").Subrouter()
+	userRouter.Use(adminAuthMiddleware)
 
 	userRouter.HandleFunc(
 		"",
@@ -110,6 +114,7 @@ func createHandler(
 	).Methods("GET")
 
 	projectRouter := router.PathPrefix("/projects").Subrouter()
+	projectRouter.Use(adminAuthMiddleware)
 
 	projectRouter.HandleFunc(
 		"",

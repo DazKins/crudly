@@ -10,26 +10,26 @@ import (
 )
 
 type Config struct {
-	Port                  uint
-	PostgresHost          string
-	PostgresPort          uint
-	PostgresUsername      string
-	PostgresPassword      string
-	PostgresDatabase      string
-	ProjectCreationApiKey string
+	Port             uint
+	PostgresHost     string
+	PostgresPort     uint
+	PostgresUsername string
+	PostgresPassword string
+	PostgresDatabase string
+	AdminApiKey      string
 }
 
 func InitialiseConfg() Config {
 	godotenv.Load()
 
 	return Config{
-		Port:                  getUint("PORT").UnwrapOrDefault(80),
-		PostgresHost:          getEnv("POSTGRES_HOST").Unwrap(),
-		PostgresPort:          getUint("POSTGRES_PORT").Unwrap(),
-		PostgresUsername:      getEnv("POSTGRES_USERNAME").Unwrap(),
-		PostgresPassword:      getEnv("POSTGRES_PASSWORD").Unwrap(),
-		PostgresDatabase:      getEnv("POSTGRES_DATABASE").Unwrap(),
-		ProjectCreationApiKey: getEnv("PROJECT_CREATION_API_KEY").Unwrap(),
+		Port:             getUint("PORT").UnwrapOrDefault(80),
+		PostgresHost:     getEnv("POSTGRES_HOST").Unwrap(),
+		PostgresPort:     getUint("POSTGRES_PORT").Unwrap(),
+		PostgresUsername: getEnv("POSTGRES_USERNAME").Unwrap(),
+		PostgresPassword: getEnv("POSTGRES_PASSWORD").Unwrap(),
+		PostgresDatabase: getEnv("POSTGRES_DATABASE").Unwrap(),
+		AdminApiKey:      getEnv("ADMIN_API_KEY").Unwrap(),
 	}
 }
 
