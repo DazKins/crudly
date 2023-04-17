@@ -33,8 +33,12 @@ func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.T
 
 	missingFields := util.MapSubtract(tableSchema, entity)
 
-	if len(missingFields) != 0 {
-		return fmt.Errorf("missing fields: %+v", util.Keys(missingFields))
+	for fieldName, fieldDefinition := range missingFields {
+		if fieldDefinition.IsOptional {
+			continue
+		}
+
+		return fmt.Errorf("missing field: %s", fieldName.String())
 	}
 
 	return nil

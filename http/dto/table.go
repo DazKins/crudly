@@ -47,8 +47,9 @@ func GetFieldTypeDto(fieldType model.FieldType) FieldTypeDto {
 }
 
 type FieldDefinitionDto struct {
-	Type   FieldTypeDto `json:"type"`
-	Values *[]string    `json:"values,omitempty"`
+	Type       FieldTypeDto `json:"type"`
+	Values     *[]string    `json:"values,omitempty"`
+	IsOptional bool         `json:"isOptional"`
 }
 
 func (d FieldDefinitionDto) ToModel() result.R[model.FieldDefinition] {
@@ -61,15 +62,17 @@ func (d FieldDefinitionDto) ToModel() result.R[model.FieldDefinition] {
 	fieldType := fieldTypeResult.Unwrap()
 
 	return result.Ok(model.FieldDefinition{
-		Type:   fieldType,
-		Values: optional.FromPointer(d.Values),
+		Type:       fieldType,
+		Values:     optional.FromPointer(d.Values),
+		IsOptional: d.IsOptional,
 	})
 }
 
 func GetFieldDefinitionDto(d model.FieldDefinition) FieldDefinitionDto {
 	return FieldDefinitionDto{
-		Type:   GetFieldTypeDto(d.Type),
-		Values: d.Values.ToPointer(),
+		Type:       GetFieldTypeDto(d.Type),
+		Values:     d.Values.ToPointer(),
+		IsOptional: d.IsOptional,
 	}
 }
 

@@ -108,7 +108,7 @@ func getPostgresFieldQuery(key model.FieldName, fieldDefinition model.FieldDefin
 
 	if fieldDefinition.PrimaryKey {
 		fieldQuery += " PRIMARY KEY"
-	} else {
+	} else if !fieldDefinition.IsOptional {
 		fieldQuery += " NOT NULL"
 	}
 

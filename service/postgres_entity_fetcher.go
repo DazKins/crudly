@@ -53,13 +53,20 @@ func (p postgresEntityFetcher) FetchEntity(
 	columns := make([]any, len(columnTypes))
 
 	for i := range columns {
-		columns[i] = new(string)
+		columns[i] = new(sql.NullString)
 	}
 
 	err = rows.Scan(columns...)
 
 	for i, column := range columns {
-		str := *(column.(*string))
+		nullStr := *(column.(*sql.NullString))
+
+		if !nullStr.Valid {
+			continue
+		}
+
+		str := nullStr.String
+
 		columnType := *columnTypes[i]
 
 		fieldName := model.FieldName(columnType.Name())
@@ -106,7 +113,7 @@ func (p postgresEntityFetcher) FetchEntities(
 	entities := model.Entities{}
 
 	for i := range columns {
-		columns[i] = new(string)
+		columns[i] = new(sql.NullString)
 	}
 
 	for rows.Next() {
@@ -115,7 +122,14 @@ func (p postgresEntityFetcher) FetchEntities(
 		err = rows.Scan(columns...)
 
 		for i, column := range columns {
-			str := *(column.(*string))
+			nullStr := *(column.(*sql.NullString))
+
+			if !nullStr.Valid {
+				continue
+			}
+
+			str := nullStr.String
+
 			columnType := *columnTypes[i]
 
 			fieldName := model.FieldName(columnType.Name())
