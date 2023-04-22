@@ -54,7 +54,7 @@ func getPostgresEntityUpdateQuery(
 			panic(fmt.Sprintf("error parsing field: %s: %s", k, valResult.UnwrapErr().Error()))
 		}
 
-		setQuery += fmt.Sprintf("%s = %s,", k, valResult.Unwrap())
+		setQuery += fmt.Sprintf("\"%s\" = %s,", k, valResult.Unwrap())
 	}
 
 	setQuery = strings.TrimSuffix(setQuery, ",")

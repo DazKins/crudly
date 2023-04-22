@@ -104,7 +104,11 @@ func getPostgresTableCreationQuery(
 }
 
 func getPostgresFieldQuery(key model.FieldName, fieldDefinition model.FieldDefinition) string {
-	fieldQuery := key.String() + " " + getPostgresDatatype(fieldDefinition.Type)
+	fieldQuery := fmt.Sprintf(
+		"\"%s\" %s",
+		key.String(),
+		getPostgresDatatype(fieldDefinition.Type),
+	)
 
 	if fieldDefinition.PrimaryKey {
 		fieldQuery += " PRIMARY KEY"

@@ -42,7 +42,7 @@ type entityCreator interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entity model.Entity,
-	) error
+	) result.R[model.EntityId]
 
 	CreateEntities(
 		projectId model.ProjectId,
@@ -294,6 +294,8 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unexpected error creating entity"))
 		return
 	}
+
+	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
 func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
@@ -318,13 +320,15 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = e.entityCreator.CreateEntity(
+	entityIdResult := e.entityCreator.CreateEntity(
 		projectId,
 		tableName,
 		entityResult.Unwrap(),
 	)
 
-	if err != nil {
+	if entityIdResult.IsErr() {
+		err := entityIdResult.UnwrapErr()
+
 		middleware.AttachError(w, err)
 
 		if err, ok := err.(errs.InvalidEntityError); ok {
@@ -337,6 +341,8 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unexpected error creating entity"))
 		return
 	}
+
+	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
 func (e entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) {

@@ -71,13 +71,22 @@ func (p postgresEntityFetcher) FetchEntity(
 
 		fieldName := model.FieldName(columnType.Name())
 
-		fieldDefinition := tableSchema[fieldName]
+		if fieldName.String() == "id" {
+			entity[fieldName] = parsePostgresFieldString(str, model.FieldTypeId)
+			continue
+		}
+
+		fieldDefinition, ok := tableSchema[fieldName]
+
+		if !ok {
+			return result.Errf[model.Entity]("field: %s is not in table schema", fieldName)
+		}
 
 		entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
 	}
 
 	if err != nil {
-		return result.Err[model.Entity](fmt.Errorf("error scaning postgres rows: %w", err))
+		return result.Errf[model.Entity]("error scaning postgres rows: %w", err)
 	}
 
 	return result.Ok(entity)
@@ -134,13 +143,22 @@ func (p postgresEntityFetcher) FetchEntities(
 
 			fieldName := model.FieldName(columnType.Name())
 
-			fieldDefinition := tableSchema[fieldName]
+			if fieldName.String() == "id" {
+				entity[fieldName] = parsePostgresFieldString(str, model.FieldTypeId)
+				continue
+			}
+
+			fieldDefinition, ok := tableSchema[fieldName]
+
+			if !ok {
+				return result.Errf[model.Entities]("field: %s is not in table schema", fieldName)
+			}
 
 			entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
 		}
 
 		if err != nil {
-			return result.Err[model.Entities](fmt.Errorf("error scaning postgres rows: %w", err))
+			return result.Errf[model.Entities]("error scaning postgres rows: %w", err)
 		}
 
 		entities = append(entities, entity)
@@ -155,7 +173,11 @@ func parsePostgresFieldString(str string, fieldType model.FieldType) any {
 		uuid, err := uuid.Parse(str)
 
 		if err != nil {
-			panic("couldn't parse uuid in sql response")
+			panic(fmt.Sprintf(
+				"couldn't parse uuid in sql response, error: %s, val: %s",
+				err.Error(),
+				str,
+			))
 		}
 
 		return uuid
@@ -208,7 +230,7 @@ func getPostgresEntitiesQuery(
 
 		for k, v := range entityFilter {
 			filters += fmt.Sprintf(
-				"%s %s %s AND ",
+				"\"%s\" %s %s AND ",
 				k,
 				getPostgresComparator(v.Type),
 				getPostgresFieldValue(v.Comparator).Unwrap(),

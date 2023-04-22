@@ -56,7 +56,7 @@ func (d FieldDefinitionDto) ToModel() result.R[model.FieldDefinition] {
 	fieldTypeResult := d.Type.ToModel()
 
 	if fieldTypeResult.IsErr() {
-		result.Err[model.FieldDefinition](fmt.Errorf("error parsing field type: %w", fieldTypeResult.UnwrapErr()))
+		return result.Err[model.FieldDefinition](fmt.Errorf("error parsing field type: %w", fieldTypeResult.UnwrapErr()))
 	}
 
 	fieldType := fieldTypeResult.Unwrap()

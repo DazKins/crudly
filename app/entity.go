@@ -230,15 +230,21 @@ func (e entityManager) CreateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entity model.Entity,
-) error {
+) result.R[model.EntityId] {
 	id := model.EntityId(uuid.New())
 
-	return e.CreateEntityWithId(
+	err := e.CreateEntityWithId(
 		projectId,
 		tableName,
 		id,
 		entity,
 	)
+
+	if err != nil {
+		return result.Err[model.EntityId](err)
+	}
+
+	return result.Ok(id)
 }
 
 func (e entityManager) CreateEntities(

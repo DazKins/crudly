@@ -31,8 +31,6 @@ func main() {
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 	postgresEntityDeleterService := service.NewPostgresEntityDeleter(postgres)
-	postgresUserFetcherService := service.NewPostgresUserFetcher(postgres)
-	postgresUserCreatorService := service.NewPostgresUserCreator(postgres)
 
 	entityValidator := validation.NewEntityValidator()
 	partialEntityValidator := validation.NewPartialEntityValidator()
@@ -40,7 +38,6 @@ func main() {
 	entityOrderValidator := validation.NewEntityOrderValidator()
 	tableSchemaValidator := validation.NewTableSchemaValidator()
 
-	userManager := app.NewUserManager(postgresUserCreatorService, postgresUserFetcherService)
 	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
 	tableManager := app.NewTableManager(
 		postgresTableGetterService,
@@ -62,7 +59,6 @@ func main() {
 
 	http.StartServer(
 		config,
-		userManager,
 		projectManager,
 		tableManager,
 		entityManager,
