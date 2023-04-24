@@ -27,6 +27,8 @@ func (p postgresProjectAuthFetcher) FetchProjectAuthInfo(id model.ProjectId) res
 		return result.Err[model.ProjectAuthInfo](fmt.Errorf("error querying postgres: %w", err))
 	}
 
+	defer rows.Close()
+
 	if !rows.Next() {
 		return result.Err[model.ProjectAuthInfo](errs.ProjectNotFoundError{})
 	}

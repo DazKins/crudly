@@ -37,7 +37,7 @@ func (p postgresEntityCreator) CreateEntity(
 		entity,
 	)
 
-	_, err := p.postgres.Query(query)
+	rows, err := p.postgres.Query(query)
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -48,6 +48,8 @@ func (p postgresEntityCreator) CreateEntity(
 
 		return fmt.Errorf("error querying postgres: %w", err)
 	}
+
+	defer rows.Close()
 
 	return nil
 }

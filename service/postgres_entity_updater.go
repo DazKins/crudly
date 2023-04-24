@@ -30,7 +30,7 @@ func (p postgresEntityUpdater) UpdateEntity(
 		partialEntity,
 	)
 
-	_, err := p.postgres.Query(query)
+	_, err := p.postgres.Exec(query)
 
 	if err != nil {
 		return fmt.Errorf("error querying postgres: %w", err)
