@@ -6,6 +6,7 @@ import (
 	"crudly/util/result"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -59,6 +60,8 @@ func (p projectManager) CreateProject() result.R[model.CreateProjectResponse] {
 const PROJECT_KEY_SIZE uint = 80
 
 func generateKey() model.ProjectKey {
+	rand.Seed(time.Now().UnixNano())
+
 	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	keyString := ""
 
@@ -73,6 +76,8 @@ func generateKey() model.ProjectKey {
 const PROJECT_KEY_SALT_SIZE uint = 10
 
 func generateKeySalt() string {
+	rand.Seed(time.Now().UnixNano())
+
 	alphabet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	salt := ""
 
