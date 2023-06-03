@@ -55,7 +55,7 @@ type entityManager interface {
 		tableName model.TableName,
 		id model.EntityId,
 		partialEntity model.PartialEntity,
-	) error
+	) result.R[model.Entity]
 	DeleteEntity(
 		projectId model.ProjectId,
 		tableName model.TableName,

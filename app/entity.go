@@ -47,9 +47,10 @@ type entityUpdater interface {
 	UpdateEntity(
 		projectId model.ProjectId,
 		tableName model.TableName,
+		tableSchema model.TableSchema,
 		id model.EntityId,
 		partialEntity model.PartialEntity,
-	) error
+	) result.R[model.Entity]
 }
 
 type entityDeleter interface {
@@ -290,11 +291,11 @@ func (e entityManager) UpdateEntity(
 	tableName model.TableName,
 	id model.EntityId,
 	partialEntity model.PartialEntity,
-) error {
+) result.R[model.Entity] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
-		return fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr())
+		return result.Errf[model.Entity]("error getting table schema: %w", tableSchemaResult.UnwrapErr())
 	}
 
 	tableSchema := tableSchemaResult.Unwrap()
@@ -302,12 +303,13 @@ func (e entityManager) UpdateEntity(
 	err := e.partialEntityValidator.ValidatePartialEntity(partialEntity, tableSchema)
 
 	if err != nil {
-		return errs.NewInvalidPartialEntityError(err)
+		return result.Err[model.Entity](errs.NewInvalidPartialEntityError(err))
 	}
 
 	return e.entityUpdater.UpdateEntity(
 		projectId,
 		tableName,
+		tableSchema,
 		id,
 		partialEntity,
 	)

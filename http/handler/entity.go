@@ -57,7 +57,7 @@ type entityUpdater interface {
 		tableName model.TableName,
 		id model.EntityId,
 		partialEntity model.PartialEntity,
-	) error
+	) result.R[model.Entity]
 }
 
 type entityDeleter interface {
@@ -423,14 +423,16 @@ func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = e.entityUpdater.UpdateEntity(
+	entityResult := e.entityUpdater.UpdateEntity(
 		projectId,
 		tableName,
 		entityIdResult.Unwrap(),
 		partialEntityResult.Unwrap(),
 	)
 
-	if err != nil {
+	if entityResult.IsErr() {
+		err := entityResult.UnwrapErr()
+
 		middleware.AttachError(w, err)
 
 		if _, ok := err.(errs.InvalidPartialEntityError); ok {
@@ -443,6 +445,13 @@ func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unexpected error updating entity"))
 		return
 	}
+
+	entityDto := dto.GetEntityDto(entityResult.Unwrap())
+
+	resBodyBytes, _ := json.Marshal(entityDto)
+
+	w.Header().Set("content-type", "application/json")
+	w.Write(resBodyBytes)
 }
 
 func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {

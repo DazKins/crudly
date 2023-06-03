@@ -1,7 +1,9 @@
 package service
 
 import (
+	"crudly/errs"
 	"crudly/model"
+	"crudly/util/result"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -20,9 +22,10 @@ func NewPostgresEntityUpdater(postgres *sql.DB) postgresEntityUpdater {
 func (p postgresEntityUpdater) UpdateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	tableSchema model.TableSchema,
 	id model.EntityId,
 	partialEntity model.PartialEntity,
-) error {
+) result.R[model.Entity] {
 	query := getPostgresEntityUpdateQuery(
 		projectId,
 		tableName,
@@ -30,13 +33,19 @@ func (p postgresEntityUpdater) UpdateEntity(
 		partialEntity,
 	)
 
-	_, err := p.postgres.Exec(query)
+	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		return fmt.Errorf("error querying postgres: %w", err)
+		return result.Errf[model.Entity]("error querying postgres: %w", err)
 	}
 
-	return nil
+	defer rows.Close()
+
+	if !rows.Next() {
+		return result.Err[model.Entity](errs.EntityNotFoundError{})
+	}
+
+	return parseEntityFromSqlRow(rows, tableSchema)
 }
 
 func getPostgresEntityUpdateQuery(
@@ -60,7 +69,7 @@ func getPostgresEntityUpdateQuery(
 	setQuery = strings.TrimSuffix(setQuery, ",")
 
 	return fmt.Sprintf(
-		"UPDATE \"%s\" SET %s WHERE id = '%s'",
+		"UPDATE \"%s\" SET %s WHERE id = '%s' RETURNING *",
 		getPostgresTableName(projectId, tableName),
 		setQuery,
 		id.String(),

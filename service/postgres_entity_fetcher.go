@@ -47,49 +47,7 @@ func (p postgresEntityFetcher) FetchEntity(
 		return result.Err[model.Entity](errs.EntityNotFoundError{})
 	}
 
-	entity := model.Entity{}
-
-	columnTypes, _ := rows.ColumnTypes()
-	columns := make([]any, len(columnTypes))
-
-	for i := range columns {
-		columns[i] = new(sql.NullString)
-	}
-
-	err = rows.Scan(columns...)
-
-	for i, column := range columns {
-		nullStr := *(column.(*sql.NullString))
-
-		if !nullStr.Valid {
-			continue
-		}
-
-		str := nullStr.String
-
-		columnType := *columnTypes[i]
-
-		fieldName := model.FieldName(columnType.Name())
-
-		if fieldName.String() == "id" {
-			entity[fieldName] = parsePostgresFieldString(str, model.FieldTypeId)
-			continue
-		}
-
-		fieldDefinition, ok := tableSchema[fieldName]
-
-		if !ok {
-			return result.Errf[model.Entity]("field: %s is not in table schema", fieldName)
-		}
-
-		entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
-	}
-
-	if err != nil {
-		return result.Errf[model.Entity]("error scaning postgres rows: %w", err)
-	}
-
-	return result.Ok(entity)
+	return parseEntityFromSqlRow(rows, tableSchema)
 }
 
 func (p postgresEntityFetcher) FetchEntities(
@@ -126,45 +84,62 @@ func (p postgresEntityFetcher) FetchEntities(
 	}
 
 	for rows.Next() {
-		entity := model.Entity{}
+		entityResult := parseEntityFromSqlRow(rows, tableSchema)
 
-		err = rows.Scan(columns...)
-
-		for i, column := range columns {
-			nullStr := *(column.(*sql.NullString))
-
-			if !nullStr.Valid {
-				continue
-			}
-
-			str := nullStr.String
-
-			columnType := *columnTypes[i]
-
-			fieldName := model.FieldName(columnType.Name())
-
-			if fieldName.String() == "id" {
-				entity[fieldName] = parsePostgresFieldString(str, model.FieldTypeId)
-				continue
-			}
-
-			fieldDefinition, ok := tableSchema[fieldName]
-
-			if !ok {
-				return result.Errf[model.Entities]("field: %s is not in table schema", fieldName)
-			}
-
-			entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
+		if entityResult.IsErr() {
+			return result.Errf[model.Entities]("error parsing entity: %w", entityResult.UnwrapErr())
 		}
 
-		if err != nil {
-			return result.Errf[model.Entities]("error scaning postgres rows: %w", err)
-		}
-
-		entities = append(entities, entity)
+		entities = append(entities, entityResult.Unwrap())
 	}
 
 	return result.Ok(entities)
+}
+
+func parseEntityFromSqlRow(rows *sql.Rows, tableSchema model.TableSchema) result.R[model.Entity] {
+	entity := model.Entity{}
+
+	columnTypes, _ := rows.ColumnTypes()
+	columns := make([]any, len(columnTypes))
+
+	for i := range columns {
+		columns[i] = new(sql.NullString)
+	}
+
+	err := rows.Scan(columns...)
+
+	for i, column := range columns {
+		nullStr := *(column.(*sql.NullString))
+
+		if !nullStr.Valid {
+			continue
+		}
+
+		str := nullStr.String
+
+		columnType := *columnTypes[i]
+
+		fieldName := model.FieldName(columnType.Name())
+
+		if fieldName.String() == "id" {
+			entity[fieldName] = parsePostgresFieldString(str, model.FieldTypeId)
+			continue
+		}
+
+		fieldDefinition, ok := tableSchema[fieldName]
+
+		if !ok {
+			return result.Errf[model.Entity]("field: %s is not in table schema", fieldName)
+		}
+
+		entity[fieldName] = parsePostgresFieldString(str, fieldDefinition.Type)
+	}
+
+	if err != nil {
+		return result.Errf[model.Entity]("error scaning postgres rows: %w", err)
+	}
+
+	return result.Ok(entity)
 }
 
 func parsePostgresFieldString(str string, fieldType model.FieldType) any {
