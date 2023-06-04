@@ -6,6 +6,7 @@ import (
 	"crudly/config"
 	"crudly/http"
 	"crudly/postgres"
+	"crudly/redis"
 	"crudly/service"
 	"fmt"
 
@@ -22,6 +23,8 @@ func main() {
 		return
 	}
 
+	redis := redis.NewRedis(config)
+
 	postgresTableCreatorService := service.NewPostgresTableCreator(postgres)
 	postgresTableGetterService := service.NewPostgresTableFetcher(postgres)
 	postgresTableDeleterService := service.NewPostgresTableDeleter(postgres)
@@ -31,6 +34,8 @@ func main() {
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 	postgresEntityDeleterService := service.NewPostgresEntityDeleter(postgres)
+
+	redisRateLimitStoreService := service.NewRedisRateLimiterStore(redis)
 
 	entityValidator := validation.NewEntityValidator()
 	partialEntityValidator := validation.NewPartialEntityValidator()
@@ -56,11 +61,13 @@ func main() {
 		entityFilterValidator,
 		entityOrderValidator,
 	)
+	rateLimitManager := app.NewRateLimitManager(redisRateLimitStoreService)
 
 	http.StartServer(
 		config,
 		projectManager,
 		tableManager,
 		entityManager,
+		rateLimitManager,
 	)
 }

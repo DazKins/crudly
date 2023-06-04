@@ -63,11 +63,18 @@ type entityManager interface {
 	) error
 }
 
+type rateLimitManager interface {
+	GetDailyRateLimit(projectId model.ProjectId) uint
+	GetCurrentRateUsage(projectId model.ProjectId) result.R[uint]
+	HandleUsage(projectId model.ProjectId) error
+}
+
 func createHandler(
 	config config.Config,
 	projectManager projectManager,
 	tableManager tableManager,
 	entityManager entityManager,
+	rateLimitManager rateLimitManager,
 ) http.Handler {
 	projectHandler := handler.NewProjectHandler(config, projectManager)
 	tableHandler := handler.NewTableHandler(
@@ -88,6 +95,7 @@ func createHandler(
 	projectIdMiddleware := middleware.NewProjectId()
 	projectAuthMiddleware := middleware.NewProjectAuth(projectManager)
 	loggerMiddleware := middleware.NewLogger(os.Stdout)
+	rateLimitMiddleware := middleware.NewRateLimit(rateLimitManager, rateLimitManager)
 
 	router := mux.NewRouter()
 	router.Use(loggerMiddleware)
@@ -104,6 +112,7 @@ func createHandler(
 	tableRouter := router.PathPrefix("/tables").Subrouter()
 	tableRouter.Use(projectIdMiddleware)
 	tableRouter.Use(projectAuthMiddleware)
+	tableRouter.Use(rateLimitMiddleware)
 	tableRouter.Use(tableNameMiddleware)
 
 	tableRouter.HandleFunc(
@@ -171,12 +180,14 @@ func StartServer(
 	projectManager projectManager,
 	tableManager tableManager,
 	entityManager entityManager,
+	rateLimitManager rateLimitManager,
 ) {
 	handler := createHandler(
 		config,
 		projectManager,
 		tableManager,
 		entityManager,
+		rateLimitManager,
 	)
 
 	fmt.Printf("Starting server on port %d...\n", config.Port)
