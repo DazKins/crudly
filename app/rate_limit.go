@@ -21,8 +21,8 @@ func NewRateLimitManager(rateLimiterStore rateLimiterStore) rateLimitManager {
 	}
 }
 
-func (a rateLimitManager) GetDailyRateLimit(projectId model.ProjectId) uint {
-	return 10 // TODO store and manage per project somewhere
+func (a rateLimitManager) GetDailyRateLimit(projectId model.ProjectId) result.R[uint] {
+	return result.Ok(uint(10)) // TODO store and manage per project somewhere
 }
 
 func (a rateLimitManager) GetCurrentRateUsage(projectId model.ProjectId) result.R[uint] {

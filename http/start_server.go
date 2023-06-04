@@ -64,7 +64,7 @@ type entityManager interface {
 }
 
 type rateLimitManager interface {
-	GetDailyRateLimit(projectId model.ProjectId) uint
+	GetDailyRateLimit(projectId model.ProjectId) result.R[uint]
 	GetCurrentRateUsage(projectId model.ProjectId) result.R[uint]
 	HandleUsage(projectId model.ProjectId) error
 }
@@ -88,6 +88,7 @@ func createHandler(
 		entityManager,
 		entityManager,
 	)
+	rateLimitHandler := handler.NewRateLimitHandler(rateLimitManager)
 
 	adminApiKeyMiddleware := middleware.NewAdminApiKey(config)
 	adminAuthMiddleware := middleware.NewAdminAuth()
@@ -108,6 +109,15 @@ func createHandler(
 		"",
 		projectHandler.PostProject,
 	).Methods("POST")
+
+	rateLimitRouter := router.PathPrefix("/rateLimit").Subrouter()
+	rateLimitRouter.Use(projectIdMiddleware)
+	rateLimitRouter.Use(projectAuthMiddleware)
+
+	rateLimitRouter.HandleFunc(
+		"",
+		rateLimitHandler.GetRateLimit,
+	).Methods("GET")
 
 	tableRouter := router.PathPrefix("/tables").Subrouter()
 	tableRouter.Use(projectIdMiddleware)

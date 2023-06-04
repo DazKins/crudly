@@ -8,10 +8,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/sync/errgroup"
 )
 
 type RateLimitGetter interface {
-	GetDailyRateLimit(projectId model.ProjectId) uint
+	GetDailyRateLimit(projectId model.ProjectId) result.R[uint]
 	GetCurrentRateUsage(projectId model.ProjectId) result.R[uint]
 }
 
@@ -38,22 +39,41 @@ func NewRateLimit(rateLimitGetter RateLimitGetter, rateLimitHandler RateLimitHan
 			}
 
 			go func() {
-				currentUsageResult := rateLimitGetter.GetCurrentRateUsage(projectId)
+				dailyRateLimit, currentRateusage := uint(0), uint(0)
 
-				if currentUsageResult.IsErr() {
-					fmt.Printf("error getting rate limit usage: %s\n", currentUsageResult.UnwrapErr().Error())
-				} else {
-					currentUsage := currentUsageResult.Unwrap()
+				g, _ := errgroup.WithContext(r.Context())
 
-					if currentUsage >= rateLimitGetter.GetDailyRateLimit(projectId) {
-						blockedProjects[projectId] = struct{}{}
+				g.Go(func() error {
+					currentRateUsageResult := rateLimitGetter.GetCurrentRateUsage(projectId)
+
+					if currentRateUsageResult.IsErr() {
+						return fmt.Errorf("error getting current rate usage: %w", currentRateUsageResult.UnwrapErr())
 					}
+
+					currentRateusage = currentRateUsageResult.Unwrap()
+
+					return nil
+				})
+
+				g.Go(func() error {
+					dailyRateLimitResult := rateLimitGetter.GetDailyRateLimit(projectId)
+
+					if dailyRateLimitResult.IsErr() {
+						return fmt.Errorf("error getting daily rate limit: %w", dailyRateLimitResult.UnwrapErr())
+					}
+
+					dailyRateLimit = dailyRateLimitResult.Unwrap()
+
+					return nil
+				})
+
+				if err := g.Wait(); err != nil {
+					fmt.Printf("%s\n", err.Error())
+					return
 				}
 
-				err := rateLimitHandler.HandleUsage(projectId)
-
-				if err != nil {
-					fmt.Printf("error handle rate limit usage: %s\n", err)
+				if currentRateusage >= dailyRateLimit {
+					blockedProjects[projectId] = struct{}{}
 				}
 			}()
 
