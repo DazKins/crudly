@@ -17,7 +17,7 @@ func NewPostgresEntityDeleter(postgres *sql.DB) postgresEntityDeleter {
 	}
 }
 
-func (p postgresEntityDeleter) DeleteEntity(
+func (p *postgresEntityDeleter) DeleteEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,

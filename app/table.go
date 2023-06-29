@@ -58,7 +58,7 @@ func NewTableManager(
 	}
 }
 
-func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema] {
+func (t *tableManager) GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema] {
 	tableSchemaResult := t.tableSchemaFetcher.FetchTableSchema(projectId, name)
 
 	if tableSchemaResult.IsErr() {
@@ -78,7 +78,7 @@ func (t tableManager) GetTableSchema(projectId model.ProjectId, name model.Table
 	return result.Ok(tableSchema)
 }
 
-func (t tableManager) GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas] {
+func (t *tableManager) GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas] {
 	tableSchemasResult := t.tableSchemaFetcher.FetchTableSchemas(projectId)
 
 	if tableSchemasResult.IsErr() {
@@ -88,7 +88,7 @@ func (t tableManager) GetTableSchemas(projectId model.ProjectId) result.R[model.
 	return result.Ok(tableSchemasResult.Unwrap())
 }
 
-func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error {
+func (t *tableManager) CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error {
 	_, ok := schema["id"]
 
 	if ok {
@@ -113,6 +113,6 @@ func (t tableManager) CreateTable(projectId model.ProjectId, name model.TableNam
 	)
 }
 
-func (t tableManager) DeleteTable(projectId model.ProjectId, name model.TableName) error {
+func (t *tableManager) DeleteTable(projectId model.ProjectId, name model.TableName) error {
 	return t.tableDeleter.DeleteTable(projectId, name)
 }

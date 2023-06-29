@@ -16,7 +16,7 @@ func NewPartialEntityValidator() partialEntityValidator {
 	return partialEntityValidator{}
 }
 
-func (p partialEntityValidator) ValidatePartialEntity(partialEntity model.PartialEntity, tableSchema model.TableSchema) error {
+func (p *partialEntityValidator) ValidatePartialEntity(partialEntity model.PartialEntity, tableSchema model.TableSchema) error {
 	for k := range partialEntity {
 		fieldDefinition, ok := tableSchema[k]
 

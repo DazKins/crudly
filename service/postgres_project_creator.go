@@ -16,7 +16,7 @@ func NewPostgresProjectCreator(postgres *sql.DB) postgresProjectCreator {
 	}
 }
 
-func (p postgresProjectCreator) CreateProject(
+func (p *postgresProjectCreator) CreateProject(
 	id model.ProjectId,
 	authInfo model.ProjectAuthInfo,
 ) error {

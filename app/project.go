@@ -31,11 +31,11 @@ func NewProjectManager(projectCreator projectCreator, projectAuthInfoFetcher pro
 	}
 }
 
-func (p projectManager) GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo] {
+func (p *projectManager) GetProjectAuthInfo(id model.ProjectId) result.R[model.ProjectAuthInfo] {
 	return p.projectAuthInfoFetcher.FetchProjectAuthInfo(id)
 }
 
-func (p projectManager) CreateProject() result.R[model.CreateProjectResponse] {
+func (p *projectManager) CreateProject() result.R[model.CreateProjectResponse] {
 	id := model.ProjectId(uuid.New())
 
 	key := generateKey()

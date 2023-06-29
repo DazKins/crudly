@@ -16,7 +16,7 @@ func NewEntityValidator() entityValidator {
 	return entityValidator{}
 }
 
-func (e entityValidator) ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error {
+func (e *entityValidator) ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error {
 	for k := range entity {
 		fieldDefinition, ok := tableSchema[k]
 

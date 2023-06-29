@@ -20,7 +20,7 @@ func NewRedisRateLimiterStore(redisClient *redis.Client) redisRateLimitStore {
 	}
 }
 
-func (r redisRateLimitStore) IncrementCallCount(projectId model.ProjectId, ttl time.Duration) result.R[uint] {
+func (r *redisRateLimitStore) IncrementCallCount(projectId model.ProjectId, ttl time.Duration) result.R[uint] {
 	redisKey := getRedisKey(projectId)
 
 	val, err := r.redisClient.Incr(context.Background(), redisKey).Result()
@@ -38,7 +38,7 @@ func (r redisRateLimitStore) IncrementCallCount(projectId model.ProjectId, ttl t
 	return result.Ok(uint(val))
 }
 
-func (r redisRateLimitStore) GetCurrentCallCount(projectId model.ProjectId) result.R[uint] {
+func (r *redisRateLimitStore) GetCurrentCallCount(projectId model.ProjectId) result.R[uint] {
 	val, err := r.redisClient.Get(context.Background(), getRedisKey(projectId)).Result()
 
 	if err != nil {

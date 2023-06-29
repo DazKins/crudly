@@ -19,7 +19,7 @@ func NewPostgresEntityUpdater(postgres *sql.DB) postgresEntityUpdater {
 	}
 }
 
-func (p postgresEntityUpdater) UpdateEntity(
+func (p *postgresEntityUpdater) UpdateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	tableSchema model.TableSchema,

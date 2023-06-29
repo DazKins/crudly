@@ -11,7 +11,7 @@ func NewTableSchemaValidator() tableSchemaValidator {
 	return tableSchemaValidator{}
 }
 
-func (t tableSchemaValidator) ValidateTableSchema(schema model.TableSchema) error {
+func (t *tableSchemaValidator) ValidateTableSchema(schema model.TableSchema) error {
 	for k, v := range schema {
 		if v.Type == model.FieldTypeEnum {
 			if v.Values.IsNone() {

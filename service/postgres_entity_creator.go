@@ -24,7 +24,7 @@ func NewPostgresEntityCreator(postgres *sql.DB) postgresEntityCreator {
 	}
 }
 
-func (p postgresEntityCreator) CreateEntity(
+func (p *postgresEntityCreator) CreateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
@@ -54,7 +54,7 @@ func (p postgresEntityCreator) CreateEntity(
 	return nil
 }
 
-func (p postgresEntityCreator) CreateEntities(
+func (p *postgresEntityCreator) CreateEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	ids []model.EntityId,

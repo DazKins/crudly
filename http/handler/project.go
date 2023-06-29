@@ -26,7 +26,7 @@ func NewProjectHandler(config config.Config, projectCreator projectCreator) proj
 	}
 }
 
-func (p projectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
+func (p *projectHandler) PostProject(w http.ResponseWriter, r *http.Request) {
 	createProjectResult := p.projectCreator.CreateProject()
 
 	if createProjectResult.IsErr() {

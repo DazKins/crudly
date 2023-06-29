@@ -17,7 +17,7 @@ func NewPostgresTableDeleter(postgres *sql.DB) postgresTableDeleter {
 	}
 }
 
-func (p postgresTableDeleter) DeleteTable(projectId model.ProjectId, name model.TableName) error {
+func (p *postgresTableDeleter) DeleteTable(projectId model.ProjectId, name model.TableName) error {
 	tx, err := p.postgres.BeginTx(context.Background(), nil)
 
 	if err != nil {

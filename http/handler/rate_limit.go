@@ -29,7 +29,7 @@ func NewRateLimitHandler(rateLimitGetter rateLimitGetter) rateLimitHandler {
 	}
 }
 
-func (rl rateLimitHandler) GetRateLimit(w http.ResponseWriter, r *http.Request) {
+func (rl *rateLimitHandler) GetRateLimit(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	dailyRateLimit, currentRateusage := uint(0), uint(0)

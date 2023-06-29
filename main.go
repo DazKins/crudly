@@ -43,31 +43,31 @@ func main() {
 	entityOrderValidator := validation.NewEntityOrderValidator()
 	tableSchemaValidator := validation.NewTableSchemaValidator()
 
-	projectManager := app.NewProjectManager(postgresProjectCreatorService, postgresProjectAuthInfoFetcherService)
+	projectManager := app.NewProjectManager(&postgresProjectCreatorService, &postgresProjectAuthInfoFetcherService)
 	tableManager := app.NewTableManager(
-		postgresTableGetterService,
-		postgresTableCreatorService,
-		postgresTableDeleterService,
-		tableSchemaValidator,
+		&postgresTableGetterService,
+		&postgresTableCreatorService,
+		&postgresTableDeleterService,
+		&tableSchemaValidator,
 	)
 	entityManager := app.NewEntityManager(
-		postgresEntityFetcherService,
-		postgresEntityCreatorService,
-		postgresEntityUpdaterService,
-		postgresEntityDeleterService,
-		tableManager,
-		entityValidator,
-		partialEntityValidator,
-		entityFilterValidator,
-		entityOrderValidator,
+		&postgresEntityFetcherService,
+		&postgresEntityCreatorService,
+		&postgresEntityUpdaterService,
+		&postgresEntityDeleterService,
+		&tableManager,
+		&entityValidator,
+		&partialEntityValidator,
+		&entityFilterValidator,
+		&entityOrderValidator,
 	)
-	rateLimitManager := app.NewRateLimitManager(redisRateLimitStoreService)
+	rateLimitManager := app.NewRateLimitManager(&redisRateLimitStoreService)
 
 	http.StartServer(
 		config,
-		projectManager,
-		tableManager,
-		entityManager,
+		&projectManager,
+		&tableManager,
+		&entityManager,
 		&rateLimitManager,
 	)
 }

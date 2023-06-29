@@ -12,7 +12,7 @@ func NewEntityOrderValidator() entityOrderValidator {
 	return entityOrderValidator{}
 }
 
-func (e entityOrderValidator) ValidateEntityOrder(
+func (e *entityOrderValidator) ValidateEntityOrder(
 	entityOrder model.EntityOrder,
 	tableSchema model.TableSchema,
 ) error {

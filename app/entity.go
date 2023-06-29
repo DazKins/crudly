@@ -123,7 +123,7 @@ func NewEntityManager(
 	}
 }
 
-func (e entityManager) GetEntity(
+func (e *entityManager) GetEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
@@ -152,7 +152,7 @@ func (e entityManager) GetEntity(
 	return entityResult
 }
 
-func (e entityManager) GetEntities(
+func (e *entityManager) GetEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entityFilter model.EntityFilter,
@@ -189,7 +189,7 @@ func (e entityManager) GetEntities(
 	)
 }
 
-func (e entityManager) CreateEntityWithId(
+func (e *entityManager) CreateEntityWithId(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
@@ -227,7 +227,7 @@ func (e entityManager) CreateEntityWithId(
 	return nil
 }
 
-func (e entityManager) CreateEntity(
+func (e *entityManager) CreateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entity model.Entity,
@@ -248,7 +248,7 @@ func (e entityManager) CreateEntity(
 	return result.Ok(id)
 }
 
-func (e entityManager) CreateEntities(
+func (e *entityManager) CreateEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entities model.Entities,
@@ -286,7 +286,7 @@ func (e entityManager) CreateEntities(
 	return nil
 }
 
-func (e entityManager) UpdateEntity(
+func (e *entityManager) UpdateEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,
@@ -315,7 +315,7 @@ func (e entityManager) UpdateEntity(
 	)
 }
 
-func (e entityManager) DeleteEntity(
+func (e *entityManager) DeleteEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	id model.EntityId,

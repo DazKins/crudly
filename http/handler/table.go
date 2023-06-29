@@ -50,7 +50,7 @@ func NewTableHandler(
 	}
 }
 
-func (t tableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
+func (t *tableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
@@ -105,7 +105,7 @@ func (t tableHandler) PutTable(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t tableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
+func (t *tableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)
@@ -147,7 +147,7 @@ func (t tableHandler) GetTable(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBodyBytes)
 }
 
-func (t tableHandler) GetTables(w http.ResponseWriter, r *http.Request) {
+func (t *tableHandler) GetTables(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	tableSchemasResult := t.tableSchemaGetter.GetTableSchemas(projectId)
@@ -169,7 +169,7 @@ func (t tableHandler) GetTables(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBodyBytes)
 }
 
-func (t tableHandler) DeleteTable(w http.ResponseWriter, r *http.Request) {
+func (t *tableHandler) DeleteTable(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 
 	vars := mux.Vars(r)

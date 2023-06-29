@@ -19,7 +19,7 @@ func NewPostgresTableFetcher(postgres *sql.DB) postgresTableFetcher {
 	}
 }
 
-func (p postgresTableFetcher) FetchTableSchema(
+func (p *postgresTableFetcher) FetchTableSchema(
 	projectId model.ProjectId,
 	name model.TableName,
 ) result.R[model.TableSchema] {
@@ -54,7 +54,7 @@ func (p postgresTableFetcher) FetchTableSchema(
 	return result.Ok(schema)
 }
 
-func (p postgresTableFetcher) FetchTableSchemas(
+func (p *postgresTableFetcher) FetchTableSchemas(
 	projectId model.ProjectId,
 ) result.R[model.TableSchemas] {
 	query := fmt.Sprintf("SELECT name, schema FROM \"%s\"", getPostgresSchemaTableName(projectId))

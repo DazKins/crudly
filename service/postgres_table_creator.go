@@ -19,7 +19,7 @@ func NewPostgresTableCreator(postgres *sql.DB) postgresTableCreator {
 	}
 }
 
-func (p postgresTableCreator) CreateTable(
+func (p *postgresTableCreator) CreateTable(
 	projectId model.ProjectId,
 	name model.TableName,
 	schema model.TableSchema,

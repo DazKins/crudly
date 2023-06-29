@@ -16,7 +16,7 @@ func NewEntityFilterValidator() entityFilterValidator {
 	return entityFilterValidator{}
 }
 
-func (e entityFilterValidator) ValidateEntityFilter(
+func (e *entityFilterValidator) ValidateEntityFilter(
 	entityFilter model.EntityFilter,
 	tableSchema model.TableSchema,
 ) error {

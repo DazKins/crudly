@@ -23,7 +23,7 @@ func NewPostgresEntityFetcher(postgres *sql.DB) postgresEntityFetcher {
 	}
 }
 
-func (p postgresEntityFetcher) FetchEntity(
+func (p *postgresEntityFetcher) FetchEntity(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	tableSchema model.TableSchema,
@@ -50,7 +50,7 @@ func (p postgresEntityFetcher) FetchEntity(
 	return parseEntityFromSqlRow(rows, tableSchema)
 }
 
-func (p postgresEntityFetcher) FetchEntities(
+func (p *postgresEntityFetcher) FetchEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	tableSchema model.TableSchema,

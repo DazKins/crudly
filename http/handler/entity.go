@@ -89,7 +89,7 @@ func NewEntityHandler(
 	}
 }
 
-func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -136,7 +136,7 @@ func (e entityHandler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBodyBytes)
 }
 
-func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -233,7 +233,7 @@ func (e entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBodyBytes)
 }
 
-func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -298,7 +298,7 @@ func (e entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
-func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -345,7 +345,7 @@ func (e entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
-func (e entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -388,7 +388,7 @@ func (e entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
@@ -454,7 +454,7 @@ func (e entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBodyBytes)
 }
 
-func (e entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
+func (e *entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 	projectId := ctx.GetRequestProjectId(r)
 	tableName := ctx.GetRequestTableName(r)
 
