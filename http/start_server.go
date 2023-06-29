@@ -67,6 +67,7 @@ type rateLimitManager interface {
 	GetDailyRateLimit(projectId model.ProjectId) result.R[uint]
 	GetCurrentRateUsage(projectId model.ProjectId) result.R[uint]
 	HandleUsage(projectId model.ProjectId) error
+	ShouldBlockRequest(projectId model.ProjectId) bool
 }
 
 func createHandler(
@@ -96,7 +97,7 @@ func createHandler(
 	projectIdMiddleware := middleware.NewProjectId()
 	projectAuthMiddleware := middleware.NewProjectAuth(projectManager)
 	loggerMiddleware := middleware.NewLogger(os.Stdout)
-	rateLimitMiddleware := middleware.NewRateLimit(rateLimitManager, rateLimitManager)
+	rateLimitMiddleware := middleware.NewRateLimit(rateLimitManager)
 
 	router := mux.NewRouter()
 	router.Use(loggerMiddleware)

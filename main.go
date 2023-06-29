@@ -68,6 +68,6 @@ func main() {
 		projectManager,
 		tableManager,
 		entityManager,
-		rateLimitManager,
+		&rateLimitManager,
 	)
 }
