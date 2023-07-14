@@ -295,6 +295,7 @@ func (e *entityHandler) PutEntity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(201)
 	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
@@ -342,6 +343,7 @@ func (e *entityHandler) PostEntity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(201)
 	w.Write([]byte(entityIdResult.Unwrap().String()))
 }
 
@@ -386,6 +388,8 @@ func (e *entityHandler) PostEntityBatch(w http.ResponseWriter, r *http.Request) 
 		w.Write([]byte("unexpected error creating entity"))
 		return
 	}
+
+	w.WriteHeader(201)
 }
 
 func (e *entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
