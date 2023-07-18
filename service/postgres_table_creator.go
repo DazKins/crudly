@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 type postgresTableCreator struct {
@@ -93,11 +92,13 @@ func getPostgresTableCreationQuery(
 	schema model.TableSchema,
 ) string {
 	query := "CREATE TABLE \"" + getPostgresTableName(projectId, name) + "\"("
+	query += getPostgresFieldQuery("id", model.FieldDefinition{
+		Type:       model.FieldTypeId,
+		PrimaryKey: true,
+	})
 	for k, v := range schema {
-		fieldQuery := getPostgresFieldQuery(k, v)
-		query += fieldQuery + ","
+		query += "," + getPostgresFieldQuery(k, v)
 	}
-	query = strings.TrimSuffix(query, ",")
 	query = query + ")"
 
 	return query

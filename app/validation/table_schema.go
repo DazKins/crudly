@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"crudly/errs"
 	"crudly/model"
 	"fmt"
 )
@@ -12,6 +13,10 @@ func NewTableSchemaValidator() tableSchemaValidator {
 }
 
 func (t *tableSchemaValidator) ValidateTableSchema(schema model.TableSchema) error {
+	if _, ok := schema["id"]; ok {
+		return errs.IdFieldAlreadyExistsError{}
+	}
+
 	for k, v := range schema {
 		if v.Type == model.FieldTypeEnum {
 			if v.Values.IsNone() {

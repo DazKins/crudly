@@ -73,8 +73,6 @@ func (t *tableManager) GetTableSchema(projectId model.ProjectId, name model.Tabl
 
 	tableSchema := tableSchemaResult.Unwrap()
 
-	delete(tableSchema, "id")
-
 	return result.Ok(tableSchema)
 }
 
@@ -89,17 +87,6 @@ func (t *tableManager) GetTableSchemas(projectId model.ProjectId) result.R[model
 }
 
 func (t *tableManager) CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error {
-	_, ok := schema["id"]
-
-	if ok {
-		return errs.IdFieldAlreadyExistsError{}
-	}
-
-	schema["id"] = model.FieldDefinition{
-		Type:       model.FieldTypeId,
-		PrimaryKey: true,
-	}
-
 	err := t.tableSchemaValidator.ValidateTableSchema(schema)
 
 	if err != nil {
