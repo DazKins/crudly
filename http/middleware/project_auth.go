@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"crudly/ctx"
+	"crudly/errs"
 	"crudly/model"
 	"crudly/util"
 	"crudly/util/result"
@@ -33,7 +34,15 @@ func NewProjectAuth(projectAuthInfoGetter projectAuthInfoGetter) mux.MiddlewareF
 			authInfoResult := projectAuthInfoGetter.GetProjectAuthInfo(projectId)
 
 			if authInfoResult.IsErr() {
-				AttachError(w, authInfoResult.UnwrapErr())
+				err := authInfoResult.UnwrapErr()
+
+				if _, ok := err.(errs.ProjectNotFoundError); ok {
+					w.WriteHeader(404)
+					w.Write([]byte("project not found"))
+					return
+				}
+
+				AttachError(w, err)
 				w.WriteHeader(500)
 				w.Write([]byte("unexpected error getting project auth details"))
 				return
