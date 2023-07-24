@@ -19,6 +19,8 @@ type Config struct {
 	PostgresSslMode  string
 	RedisHost        string
 	RedisPassword    string
+	RedisUsername    string
+	RedisPort        string
 	AdminApiKey      string
 }
 
@@ -35,6 +37,8 @@ func InitialiseConfg() Config {
 		PostgresSslMode:  getEnv("POSTGRES_SSL_MODE").Unwrap(),
 		RedisHost:        getEnv("REDIS_HOST").Unwrap(),
 		RedisPassword:    getEnv("REDIS_PASSWORD").UnwrapOrDefault(""),
+		RedisUsername:    getEnv("REDIS_USERNAME").UnwrapOrDefault(""),
+		RedisPort:        getEnv("REDIS_PORT").UnwrapOrDefault("6379"),
 		AdminApiKey:      getEnv("ADMIN_API_KEY").Unwrap(),
 	}
 }
