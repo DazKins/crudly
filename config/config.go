@@ -21,6 +21,7 @@ type Config struct {
 	RedisPassword    string
 	RedisUsername    string
 	RedisPort        string
+	RedisUseSsl      bool
 	AdminApiKey      string
 }
 
@@ -39,8 +40,25 @@ func InitialiseConfg() Config {
 		RedisPassword:    getEnv("REDIS_PASSWORD").UnwrapOrDefault(""),
 		RedisUsername:    getEnv("REDIS_USERNAME").UnwrapOrDefault(""),
 		RedisPort:        getEnv("REDIS_PORT").UnwrapOrDefault("6379"),
+		RedisUseSsl:      getBool("REDIS_USE_SSL").UnwrapOrDefault(false),
 		AdminApiKey:      getEnv("ADMIN_API_KEY").Unwrap(),
 	}
+}
+
+func getBool(env string) result.R[bool] {
+	envResult := getEnv(env)
+
+	if envResult.IsErr() {
+		return result.Err[bool](envResult.UnwrapErr())
+	}
+
+	boolVal, err := strconv.ParseBool(envResult.Unwrap())
+
+	if err != nil {
+		return result.Err[bool](fmt.Errorf("env var: %s is not a valid bool", envResult.Unwrap()))
+	}
+
+	return result.Ok(boolVal)
 }
 
 func getUint(env string) result.R[uint] {
