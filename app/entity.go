@@ -22,7 +22,7 @@ type entityFetcher interface {
 		table model.TableName,
 		tableSchema model.TableSchema,
 		entityFilter model.EntityFilter,
-		entityOrder model.EntityOrder,
+		entityOrders model.EntityOrders,
 		paginationParams model.PaginationParams,
 	) result.R[model.Entities]
 }
@@ -81,8 +81,8 @@ type entityFilterValidator interface {
 }
 
 type entityOrderValidator interface {
-	ValidateEntityOrder(
-		entityOrder model.EntityOrder,
+	ValidateEntityOrders(
+		entityOrders model.EntityOrders,
 		tableSchema model.TableSchema,
 	) error
 }
@@ -156,7 +156,7 @@ func (e *entityManager) GetEntities(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entityFilter model.EntityFilter,
-	entityOrder model.EntityOrder,
+	entityOrders model.EntityOrders,
 	paginationParams model.PaginationParams,
 ) result.R[model.Entities] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
@@ -173,10 +173,26 @@ func (e *entityManager) GetEntities(
 		return result.Err[model.Entities](errs.NewInvalidEntityFilterError(err))
 	}
 
-	err = e.entityOrderValidator.ValidateEntityOrder(entityOrder, tableSchema)
+	err = e.entityOrderValidator.ValidateEntityOrders(entityOrders, tableSchema)
 
 	if err != nil {
 		return result.Err[model.Entities](errs.NewInvalidEntityOrderError(err))
+	}
+
+	containsIdOrder := false
+
+	for _, order := range entityOrders {
+		if order.FieldName == "id" {
+			containsIdOrder = true
+			break
+		}
+	}
+
+	if !containsIdOrder {
+		entityOrders = append(entityOrders, model.EntityOrder{
+			FieldName: "id",
+			Type:      model.FieldOrderTypeAscending,
+		})
 	}
 
 	return e.entityFetcher.FetchEntities(
@@ -184,7 +200,7 @@ func (e *entityManager) GetEntities(
 		tableName,
 		tableSchema,
 		entityFilter,
-		entityOrder,
+		entityOrders,
 		paginationParams,
 	)
 }

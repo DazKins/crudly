@@ -25,7 +25,7 @@ type entityGetter interface {
 		projectId model.ProjectId,
 		tableName model.TableName,
 		entityFilter model.EntityFilter,
-		entityOrder model.EntityOrder,
+		entityOrders model.EntityOrders,
 		paginationParams model.PaginationParams,
 	) result.R[model.Entities]
 }

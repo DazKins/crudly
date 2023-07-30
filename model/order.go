@@ -17,4 +17,9 @@ func (e FieldOrderType) String() string {
 	panic("invalid field order type has entered the system in stringify!")
 }
 
-type EntityOrder map[FieldName]FieldOrderType
+type EntityOrder struct {
+	Type      FieldOrderType
+	FieldName FieldName
+}
+
+type EntityOrders []EntityOrder

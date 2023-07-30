@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-func GetEntityOrderFromQuery(query url.Values) result.R[model.EntityOrder] {
+func GetEntityOrderFromQuery(query url.Values) result.R[model.EntityOrders] {
 	orderQueries := query["order"]
 
-	entityOrder := model.EntityOrder{}
+	entityOrders := model.EntityOrders{}
 
 	for _, orderQuery := range orderQueries {
 		split := strings.Split(orderQuery, "|")
@@ -25,7 +25,7 @@ func GetEntityOrderFromQuery(query url.Values) result.R[model.EntityOrder] {
 			case "desc":
 				fieldOrderType = model.FieldOrderTypeDescending
 			default:
-				return result.Errf[model.EntityOrder](
+				return result.Errf[model.EntityOrders](
 					"invalid order type for field \"%s\": \"%s\"",
 					fieldName.String(),
 					split[1],
@@ -33,8 +33,11 @@ func GetEntityOrderFromQuery(query url.Values) result.R[model.EntityOrder] {
 			}
 		}
 
-		entityOrder[fieldName] = fieldOrderType
+		entityOrders = append(entityOrders, model.EntityOrder{
+			Type:      fieldOrderType,
+			FieldName: fieldName,
+		})
 	}
 
-	return result.Ok(entityOrder)
+	return result.Ok(entityOrders)
 }

@@ -55,14 +55,14 @@ func (p *postgresEntityFetcher) FetchEntities(
 	tableName model.TableName,
 	tableSchema model.TableSchema,
 	entityFilter model.EntityFilter,
-	entityOrder model.EntityOrder,
+	entityOrders model.EntityOrders,
 	paginationParams model.PaginationParams,
 ) result.R[model.Entities] {
 	query := getPostgresEntitiesQuery(
 		projectId,
 		tableName,
 		entityFilter,
-		entityOrder,
+		entityOrders,
 		paginationParams,
 	)
 
@@ -194,7 +194,7 @@ func getPostgresEntitiesQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
 	entityFilter model.EntityFilter,
-	entityOrder model.EntityOrder,
+	entityOrders model.EntityOrders,
 	paginationParams model.PaginationParams,
 ) string {
 
@@ -217,14 +217,14 @@ func getPostgresEntitiesQuery(
 		query += " WHERE " + filters
 	}
 
-	if len(entityOrder) != 0 {
+	if len(entityOrders) != 0 {
 		orders := ""
 
-		for fieldName, orderType := range entityOrder {
+		for _, entityOrder := range entityOrders {
 			orders += fmt.Sprintf(
-				"%s %s,",
-				fieldName.String(),
-				getPostgresOrder(orderType),
+				"\"%s\" %s,",
+				entityOrder.FieldName.String(),
+				getPostgresOrder(entityOrder.Type),
 			)
 		}
 
@@ -235,6 +235,8 @@ func getPostgresEntitiesQuery(
 
 	query += " LIMIT " + paginationParams.Limit.String() +
 		" OFFSET " + paginationParams.Offset.String()
+
+	fmt.Println(query)
 
 	return query
 }

@@ -12,12 +12,15 @@ func NewEntityOrderValidator() entityOrderValidator {
 	return entityOrderValidator{}
 }
 
-func (e *entityOrderValidator) ValidateEntityOrder(
-	entityOrder model.EntityOrder,
+func (e *entityOrderValidator) ValidateEntityOrders(
+	entityOrders model.EntityOrders,
 	tableSchema model.TableSchema,
 ) error {
 
-	for fieldName, fieldOrder := range entityOrder {
+	for _, entityOrder := range entityOrders {
+		fieldName := entityOrder.FieldName
+		fieldOrder := entityOrder.Type
+
 		fieldDefinition, ok := tableSchema[fieldName]
 
 		if !ok {
