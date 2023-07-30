@@ -31,6 +31,7 @@ func main() {
 	postgresEntityFetcherService := service.NewPostgresEntityFetcher(postgres)
 	postgresEntityCreatorService := service.NewPostgresEntityCreator(postgres)
 	postgresEntityUpdaterService := service.NewPostgresEntityUpdater(postgres)
+	postgresEntityCountService := service.NewPostgresEntityCount(postgres)
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 	postgresEntityDeleterService := service.NewPostgresEntityDeleter(postgres)
@@ -55,6 +56,7 @@ func main() {
 		&postgresEntityCreatorService,
 		&postgresEntityUpdaterService,
 		&postgresEntityDeleterService,
+		&postgresEntityCountService,
 		&tableManager,
 		&entityValidator,
 		&partialEntityValidator,

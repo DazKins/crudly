@@ -8,6 +8,7 @@ import (
 	"crudly/model"
 	"crudly/util/result"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -68,11 +69,19 @@ type entityDeleter interface {
 	) error
 }
 
+type entityCountGetter interface {
+	GetTotalEntityCount(
+		projectId model.ProjectId,
+		tableName model.TableName,
+	) result.R[uint]
+}
+
 type entityHandler struct {
-	entityGetter  entityGetter
-	entityCreator entityCreator
-	entityUpdater entityUpdater
-	entityDeleter entityDeleter
+	entityGetter      entityGetter
+	entityCreator     entityCreator
+	entityUpdater     entityUpdater
+	entityDeleter     entityDeleter
+	entityCountGetter entityCountGetter
 }
 
 func NewEntityHandler(
@@ -80,12 +89,14 @@ func NewEntityHandler(
 	entityCreator entityCreator,
 	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
+	entityCountGetter entityCountGetter,
 ) entityHandler {
 	return entityHandler{
 		entityGetter,
 		entityCreator,
 		entityUpdater,
 		entityDeleter,
+		entityCountGetter,
 	}
 }
 
@@ -494,4 +505,23 @@ func (e *entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unexpected error deleting entity"))
 		return
 	}
+}
+
+func (e *entityHandler) GetTotalEntityCount(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
+
+	totalEntityCountResult := e.entityCountGetter.GetTotalEntityCount(projectId, tableName)
+
+	if totalEntityCountResult.IsErr() {
+		err := totalEntityCountResult.UnwrapErr()
+		middleware.AttachError(w, err)
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting total entity counts"))
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.Write([]byte(fmt.Sprintf("{\"totalCount\":%d}", totalEntityCountResult.Unwrap())))
 }

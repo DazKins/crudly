@@ -61,6 +61,10 @@ type entityManager interface {
 		tableName model.TableName,
 		id model.EntityId,
 	) error
+	GetTotalEntityCount(
+		projectId model.ProjectId,
+		tableName model.TableName,
+	) result.R[uint]
 }
 
 type rateLimitManager interface {
@@ -84,6 +88,7 @@ func createHandler(
 		tableManager,
 	)
 	entityHandler := handler.NewEntityHandler(
+		entityManager,
 		entityManager,
 		entityManager,
 		entityManager,
@@ -145,6 +150,11 @@ func createHandler(
 		"/{tableName}",
 		tableHandler.DeleteTable,
 	).Methods("DELETE")
+
+	tableRouter.HandleFunc(
+		"/{tableName}/totalEntityCount",
+		entityHandler.GetTotalEntityCount,
+	).Methods("GET")
 
 	entityRouter := tableRouter.PathPrefix("/{tableName}/entities").Subrouter()
 
