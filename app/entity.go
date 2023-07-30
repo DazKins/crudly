@@ -61,13 +61,6 @@ type entityDeleter interface {
 	) error
 }
 
-type entityCountFetcher interface {
-	FetchTotalEntityCount(
-		projectId model.ProjectId,
-		tableName model.TableName,
-	) result.R[uint]
-}
-
 type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 }
@@ -99,7 +92,6 @@ type entityManager struct {
 	entityCreator          entityCreator
 	entityUpdater          entityUpdater
 	entityDeleter          entityDeleter
-	entityCountFetcher     entityCountFetcher
 	tableSchemaGetter      tableSchemaGetter
 	entityValidator        entityValidator
 	partialEntityValidator partialEntityValidator
@@ -112,7 +104,6 @@ func NewEntityManager(
 	entityCreator entityCreator,
 	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
-	entityCountFetcher entityCountFetcher,
 	tableSchemaGetter tableSchemaGetter,
 	entityValidator entityValidator,
 	partialEntityValidator partialEntityValidator,
@@ -124,7 +115,6 @@ func NewEntityManager(
 		entityCreator,
 		entityUpdater,
 		entityDeleter,
-		entityCountFetcher,
 		tableSchemaGetter,
 		entityValidator,
 		partialEntityValidator,
@@ -361,11 +351,4 @@ func (e *entityManager) DeleteEntity(
 	}
 
 	return nil
-}
-
-func (e *entityManager) GetTotalEntityCount(
-	projectId model.ProjectId,
-	tableName model.TableName,
-) result.R[uint] {
-	return e.entityCountFetcher.FetchTotalEntityCount(projectId, tableName)
 }

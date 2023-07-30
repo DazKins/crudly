@@ -50,13 +50,13 @@ func main() {
 		&postgresTableCreatorService,
 		&postgresTableDeleterService,
 		&tableSchemaValidator,
+		&postgresEntityCountService,
 	)
 	entityManager := app.NewEntityManager(
 		&postgresEntityFetcherService,
 		&postgresEntityCreatorService,
 		&postgresEntityUpdaterService,
 		&postgresEntityDeleterService,
-		&postgresEntityCountService,
 		&tableManager,
 		&entityValidator,
 		&partialEntityValidator,
