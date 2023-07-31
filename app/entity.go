@@ -1,12 +1,14 @@
 package app
 
 import (
+	"context"
 	"crudly/errs"
 	"crudly/model"
 	"crudly/util/result"
 	"fmt"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 type entityFetcher interface {
@@ -65,6 +67,14 @@ type tableSchemaGetter interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 }
 
+type entityCountFetcher interface {
+	FetchTotalEntityCount(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entityFilter model.EntityFilter,
+	) result.R[uint]
+}
+
 type entityValidator interface {
 	ValidateEntity(entity model.Entity, tableSchema model.TableSchema) error
 }
@@ -92,6 +102,7 @@ type entityManager struct {
 	entityCreator          entityCreator
 	entityUpdater          entityUpdater
 	entityDeleter          entityDeleter
+	entityCountFetcher     entityCountFetcher
 	tableSchemaGetter      tableSchemaGetter
 	entityValidator        entityValidator
 	partialEntityValidator partialEntityValidator
@@ -104,6 +115,7 @@ func NewEntityManager(
 	entityCreator entityCreator,
 	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
+	entityCountFetcher entityCountFetcher,
 	tableSchemaGetter tableSchemaGetter,
 	entityValidator entityValidator,
 	partialEntityValidator partialEntityValidator,
@@ -115,6 +127,7 @@ func NewEntityManager(
 		entityCreator,
 		entityUpdater,
 		entityDeleter,
+		entityCountFetcher,
 		tableSchemaGetter,
 		entityValidator,
 		partialEntityValidator,
@@ -158,11 +171,11 @@ func (e *entityManager) GetEntities(
 	entityFilter model.EntityFilter,
 	entityOrders model.EntityOrders,
 	paginationParams model.PaginationParams,
-) result.R[model.Entities] {
+) result.R[model.GetEntitiesResponse] {
 	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
 
 	if tableSchemaResult.IsErr() {
-		return result.Err[model.Entities](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
+		return result.Err[model.GetEntitiesResponse](fmt.Errorf("error getting table schema: %w", tableSchemaResult.UnwrapErr()))
 	}
 
 	tableSchema := tableSchemaResult.Unwrap()
@@ -170,13 +183,13 @@ func (e *entityManager) GetEntities(
 	err := e.entityFilterValidator.ValidateEntityFilter(entityFilter, tableSchema)
 
 	if err != nil {
-		return result.Err[model.Entities](errs.NewInvalidEntityFilterError(err))
+		return result.Err[model.GetEntitiesResponse](errs.NewInvalidEntityFilterError(err))
 	}
 
 	err = e.entityOrderValidator.ValidateEntityOrders(entityOrders, tableSchema)
 
 	if err != nil {
-		return result.Err[model.Entities](errs.NewInvalidEntityOrderError(err))
+		return result.Err[model.GetEntitiesResponse](errs.NewInvalidEntityOrderError(err))
 	}
 
 	containsIdOrder := false
@@ -195,14 +208,52 @@ func (e *entityManager) GetEntities(
 		})
 	}
 
-	return e.entityFetcher.FetchEntities(
-		projectId,
-		tableName,
-		tableSchema,
-		entityFilter,
-		entityOrders,
-		paginationParams,
-	)
+	entityCount := uint(0)
+	entities := model.Entities{}
+
+	g, _ := errgroup.WithContext(context.Background())
+
+	g.Go(func() error {
+		entityCountResult := e.GetTotalEntityCount(projectId, tableName, entityFilter)
+
+		if entityCountResult.IsErr() {
+			return entityCountResult.UnwrapErr()
+		}
+
+		entityCount = entityCountResult.Unwrap()
+
+		return nil
+	})
+
+	g.Go(func() error {
+		entitiesResult := e.entityFetcher.FetchEntities(
+			projectId,
+			tableName,
+			tableSchema,
+			entityFilter,
+			entityOrders,
+			paginationParams,
+		)
+
+		if entitiesResult.IsErr() {
+			return entitiesResult.UnwrapErr()
+		}
+
+		entities = entitiesResult.Unwrap()
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return result.Err[model.GetEntitiesResponse](err)
+	}
+
+	return result.Ok(model.GetEntitiesResponse{
+		Entities:   entities,
+		TotalCount: entityCount,
+		Limit:      uint(paginationParams.Limit),
+		Offset:     uint(paginationParams.Offset),
+	})
 }
 
 func (e *entityManager) CreateEntityWithId(
@@ -351,4 +402,28 @@ func (e *entityManager) DeleteEntity(
 	}
 
 	return nil
+}
+
+func (e *entityManager) GetTotalEntityCount(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	entityFilter model.EntityFilter,
+) result.R[uint] {
+	tableSchemaResult := e.tableSchemaGetter.GetTableSchema(projectId, tableName)
+
+	if tableSchemaResult.IsErr() {
+		return result.Errf[uint]("error getting table schema: %w", tableSchemaResult.UnwrapErr())
+	}
+
+	err := e.entityFilterValidator.ValidateEntityFilter(entityFilter, tableSchemaResult.Unwrap())
+
+	if err != nil {
+		return result.Err[uint](errs.NewInvalidEntityFilterError(err))
+	}
+
+	return e.entityCountFetcher.FetchTotalEntityCount(
+		projectId,
+		tableName,
+		entityFilter,
+	)
 }

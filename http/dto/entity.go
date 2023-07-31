@@ -129,3 +129,19 @@ func (p PartialEntityDto) ToModel() result.R[model.PartialEntity] {
 
 	return result.Ok(res)
 }
+
+type GetEntitiesResponseDto struct {
+	Entities   EntitiesDto `json:"entities"`
+	TotalCount int         `json:"totalCount"`
+	Limit      int         `json:"limit"`
+	Offset     int         `json:"offset"`
+}
+
+func GetGetEntitiesResponseDto(entities model.GetEntitiesResponse) GetEntitiesResponseDto {
+	return GetEntitiesResponseDto{
+		Entities:   GetEntitiesDto(entities.Entities),
+		TotalCount: int(entities.TotalCount),
+		Limit:      int(entities.Limit),
+		Offset:     int(entities.Offset),
+	}
+}

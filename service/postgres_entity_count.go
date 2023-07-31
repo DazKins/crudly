@@ -21,13 +21,14 @@ func NewPostgresEntityCount(postgres *sql.DB) postgresEntityCount {
 func (p *postgresEntityCount) FetchTotalEntityCount(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	entityFilter model.EntityFilter,
 ) result.R[uint] {
-	query := getPostgresRowCountQuery(projectId, tableName)
+	query := getPostgresRowCountQuery(projectId, tableName, entityFilter)
 
 	rows, err := p.postgres.Query(query)
 
 	if err != nil {
-		result.Errf[uint]("error querying postgres: %w", err)
+		return result.Errf[uint]("error querying postgres: %w", err)
 	}
 
 	if !rows.Next() {
@@ -44,6 +45,15 @@ func (p *postgresEntityCount) FetchTotalEntityCount(
 func getPostgresRowCountQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
+	entityFilter model.EntityFilter,
 ) string {
-	return fmt.Sprintf("SELECT COUNT(*) FROM \"%s\"", getPostgresTableName(projectId, tableName))
+	query := fmt.Sprintf("SELECT COUNT(*) FROM \"%s\"", getPostgresTableName(projectId, tableName))
+
+	filtersString := getPostgresFilterString(entityFilter)
+
+	if filtersString != nil {
+		query += " WHERE " + *filtersString
+	}
+
+	return query
 }

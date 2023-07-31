@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -37,27 +36,17 @@ type tableHandler struct {
 	tableCreator      tableCreator
 	tableSchemaGetter tableSchemaGetter
 	tableDeleter      tableDeleter
-	entityCountGetter entityCountGetter
-}
-
-type entityCountGetter interface {
-	GetTotalEntityCount(
-		projectId model.ProjectId,
-		tableName model.TableName,
-	) result.R[uint]
 }
 
 func NewTableHandler(
 	tableCreator tableCreator,
 	tableSchemaGetter tableSchemaGetter,
 	tableDeleter tableDeleter,
-	entityCountGetter entityCountGetter,
 ) tableHandler {
 	return tableHandler{
 		tableCreator,
 		tableSchemaGetter,
 		tableDeleter,
-		entityCountGetter,
 	}
 }
 
@@ -206,23 +195,4 @@ func (t *tableHandler) DeleteTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(204)
-}
-
-func (t *tableHandler) GetTotalEntityCount(w http.ResponseWriter, r *http.Request) {
-	projectId := ctx.GetRequestProjectId(r)
-	tableName := ctx.GetRequestTableName(r)
-
-	totalEntityCountResult := t.entityCountGetter.GetTotalEntityCount(projectId, tableName)
-
-	if totalEntityCountResult.IsErr() {
-		err := totalEntityCountResult.UnwrapErr()
-		middleware.AttachError(w, err)
-
-		w.WriteHeader(500)
-		w.Write([]byte("unexpected error getting total entity counts"))
-		return
-	}
-
-	w.Header().Set("content-type", "application/json")
-	w.Write([]byte(fmt.Sprintf("{\"totalCount\":%d}", totalEntityCountResult.Unwrap())))
 }

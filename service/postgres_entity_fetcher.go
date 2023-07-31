@@ -3,6 +3,7 @@ package service
 import (
 	"crudly/errs"
 	"crudly/model"
+	"crudly/util"
 	"crudly/util/result"
 	"database/sql"
 	"fmt"
@@ -190,6 +191,43 @@ func getPostgresEntityQuery(projectId model.ProjectId, tableName model.TableName
 	return "SELECT * FROM \"" + getPostgresTableName(projectId, tableName) + "\" WHERE id = '" + id.String() + "'"
 }
 
+func getPostgresFilterString(entityFilter model.EntityFilter) *string {
+	if len(entityFilter) == 0 {
+		return nil
+	}
+
+	filters := ""
+
+	for k, v := range entityFilter {
+		filters += fmt.Sprintf(
+			"\"%s\" %s %s AND ",
+			k,
+			getPostgresComparator(v.Type),
+			getPostgresFieldValue(v.Comparator).Unwrap(),
+		)
+	}
+
+	return util.Ptr(strings.TrimSuffix(filters, " AND "))
+}
+
+func getPostgresOrderString(orders model.EntityOrders) *string {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	ordersString := ""
+
+	for _, entityOrder := range orders {
+		ordersString += fmt.Sprintf(
+			"\"%s\" %s,",
+			entityOrder.FieldName.String(),
+			getPostgresOrder(entityOrder.Type),
+		)
+	}
+
+	return util.Ptr(strings.TrimSuffix(ordersString, ","))
+}
+
 func getPostgresEntitiesQuery(
 	projectId model.ProjectId,
 	tableName model.TableName,
@@ -197,40 +235,18 @@ func getPostgresEntitiesQuery(
 	entityOrders model.EntityOrders,
 	paginationParams model.PaginationParams,
 ) string {
+	query := fmt.Sprintf("SELECT * FROM \"%s\"", getPostgresTableName(projectId, tableName))
 
-	query := "SELECT * FROM \"" + getPostgresTableName(projectId, tableName) + "\""
+	filtersString := getPostgresFilterString(entityFilter)
 
-	if len(entityFilter) != 0 {
-		filters := ""
-
-		for k, v := range entityFilter {
-			filters += fmt.Sprintf(
-				"\"%s\" %s %s AND ",
-				k,
-				getPostgresComparator(v.Type),
-				getPostgresFieldValue(v.Comparator).Unwrap(),
-			)
-		}
-
-		filters = strings.TrimSuffix(filters, " AND ")
-
-		query += " WHERE " + filters
+	if filtersString != nil {
+		query += " WHERE " + *filtersString
 	}
 
-	if len(entityOrders) != 0 {
-		orders := ""
+	ordersString := getPostgresOrderString(entityOrders)
 
-		for _, entityOrder := range entityOrders {
-			orders += fmt.Sprintf(
-				"\"%s\" %s,",
-				entityOrder.FieldName.String(),
-				getPostgresOrder(entityOrder.Type),
-			)
-		}
-
-		orders = strings.TrimSuffix(orders, ",")
-
-		query += " ORDER BY " + orders + " "
+	if ordersString != nil {
+		query += " ORDER BY " + *ordersString
 	}
 
 	query += " LIMIT " + paginationParams.Limit.String() +

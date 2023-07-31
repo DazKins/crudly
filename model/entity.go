@@ -1,6 +1,8 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type EntityId uuid.UUID
 
@@ -15,3 +17,10 @@ type Entity map[FieldName]Field
 type Entities []Entity
 
 type PartialEntity map[FieldName]Field
+
+type GetEntitiesResponse struct {
+	Entities   Entities
+	TotalCount uint
+	Limit      uint
+	Offset     uint
+}

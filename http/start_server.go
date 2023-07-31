@@ -23,10 +23,6 @@ type tableManager interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 	GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas]
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
-	GetTotalEntityCount(
-		projectId model.ProjectId,
-		tableName model.TableName,
-	) result.R[uint]
 }
 
 type entityManager interface {
@@ -37,7 +33,7 @@ type entityManager interface {
 		entityFilter model.EntityFilter,
 		entityOrders model.EntityOrders,
 		paginationParams model.PaginationParams,
-	) result.R[model.Entities]
+	) result.R[model.GetEntitiesResponse]
 	CreateEntityWithId(
 		projectId model.ProjectId,
 		tableName model.TableName,
@@ -65,6 +61,11 @@ type entityManager interface {
 		tableName model.TableName,
 		id model.EntityId,
 	) error
+	GetTotalEntityCount(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entityFilter model.EntityFilter,
+	) result.R[uint]
 }
 
 type rateLimitManager interface {
@@ -86,9 +87,9 @@ func createHandler(
 		tableManager,
 		tableManager,
 		tableManager,
-		tableManager,
 	)
 	entityHandler := handler.NewEntityHandler(
+		entityManager,
 		entityManager,
 		entityManager,
 		entityManager,
@@ -153,7 +154,7 @@ func createHandler(
 
 	tableRouter.HandleFunc(
 		"/{tableName}/totalEntityCount",
-		tableHandler.GetTotalEntityCount,
+		entityHandler.GetTotalEntityCount,
 	).Methods("GET")
 
 	entityRouter := tableRouter.PathPrefix("/{tableName}/entities").Subrouter()

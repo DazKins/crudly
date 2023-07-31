@@ -37,19 +37,11 @@ type tableSchemaValidator interface {
 	ValidateTableSchema(schema model.TableSchema) error
 }
 
-type entityCountFetcher interface {
-	FetchTotalEntityCount(
-		projectId model.ProjectId,
-		tableName model.TableName,
-	) result.R[uint]
-}
-
 type tableManager struct {
 	tableSchemaFetcher   tableSchemaFetcher
 	tableCreator         tableCreator
 	tableDeleter         tableDeleter
 	tableSchemaValidator tableSchemaValidator
-	entityCountFetcher   entityCountFetcher
 }
 
 func NewTableManager(
@@ -57,14 +49,12 @@ func NewTableManager(
 	tableCreator tableCreator,
 	tableDeleter tableDeleter,
 	tableSchemaValidator tableSchemaValidator,
-	entityCountFetcher entityCountFetcher,
 ) tableManager {
 	return tableManager{
 		tableSchemaFetcher,
 		tableCreator,
 		tableDeleter,
 		tableSchemaValidator,
-		entityCountFetcher,
 	}
 }
 
@@ -112,11 +102,4 @@ func (t *tableManager) CreateTable(projectId model.ProjectId, name model.TableNa
 
 func (t *tableManager) DeleteTable(projectId model.ProjectId, name model.TableName) error {
 	return t.tableDeleter.DeleteTable(projectId, name)
-}
-
-func (t *tableManager) GetTotalEntityCount(
-	projectId model.ProjectId,
-	tableName model.TableName,
-) result.R[uint] {
-	return t.entityCountFetcher.FetchTotalEntityCount(projectId, tableName)
 }

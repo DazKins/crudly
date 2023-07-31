@@ -8,6 +8,7 @@ import (
 	"crudly/model"
 	"crudly/util/result"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -27,7 +28,7 @@ type entityGetter interface {
 		entityFilter model.EntityFilter,
 		entityOrders model.EntityOrders,
 		paginationParams model.PaginationParams,
-	) result.R[model.Entities]
+	) result.R[model.GetEntitiesResponse]
 }
 
 type entityCreator interface {
@@ -68,11 +69,20 @@ type entityDeleter interface {
 	) error
 }
 
+type entityCountGetter interface {
+	GetTotalEntityCount(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		entityFilter model.EntityFilter,
+	) result.R[uint]
+}
+
 type entityHandler struct {
-	entityGetter  entityGetter
-	entityCreator entityCreator
-	entityUpdater entityUpdater
-	entityDeleter entityDeleter
+	entityGetter      entityGetter
+	entityCreator     entityCreator
+	entityUpdater     entityUpdater
+	entityDeleter     entityDeleter
+	entityCountGetter entityCountGetter
 }
 
 func NewEntityHandler(
@@ -80,12 +90,14 @@ func NewEntityHandler(
 	entityCreator entityCreator,
 	entityUpdater entityUpdater,
 	entityDeleter entityDeleter,
+	entityCountGetter entityCountGetter,
 ) entityHandler {
 	return entityHandler{
 		entityGetter,
 		entityCreator,
 		entityUpdater,
 		entityDeleter,
+		entityCountGetter,
 	}
 }
 
@@ -225,9 +237,9 @@ func (e *entityHandler) GetEntities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entitiesDto := dto.GetEntitiesDto(entitiesResult.Unwrap())
+	getEntitiesResponseDto := dto.GetGetEntitiesResponseDto(entitiesResult.Unwrap())
 
-	resBodyBytes, _ := json.Marshal(entitiesDto)
+	resBodyBytes, _ := json.Marshal(getEntitiesResponseDto)
 
 	w.Header().Set("content-type", "application/json")
 	w.Write(resBodyBytes)
@@ -494,4 +506,48 @@ func (e *entityHandler) DeleteEntity(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("unexpected error deleting entity"))
 		return
 	}
+}
+
+func (e *entityHandler) GetTotalEntityCount(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+	tableName := ctx.GetRequestTableName(r)
+
+	entityFilterResult := dto.GetEntityFilterFromQuery(r.URL.Query())
+
+	if entityFilterResult.IsErr() {
+		middleware.AttachError(w, entityFilterResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte(entityFilterResult.UnwrapErr().Error()))
+		return
+	}
+
+	totalEntityCountResult := e.entityCountGetter.GetTotalEntityCount(
+		projectId,
+		tableName,
+		entityFilterResult.Unwrap(),
+	)
+
+	if totalEntityCountResult.IsErr() {
+		err := totalEntityCountResult.UnwrapErr()
+		middleware.AttachError(w, err)
+
+		if invalidEntityFilterError, ok := err.(errs.InvalidEntityFilterError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(invalidEntityFilterError.Error()))
+			return
+		}
+
+		if invalidEntityOrderError, ok := err.(errs.InvalidEntityOrderError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(invalidEntityOrderError.Error()))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error getting total entity counts"))
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.Write([]byte(fmt.Sprintf("{\"totalCount\":%d}", totalEntityCountResult.Unwrap())))
 }
