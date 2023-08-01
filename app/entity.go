@@ -214,7 +214,11 @@ func (e *entityManager) GetEntities(
 	g, _ := errgroup.WithContext(context.Background())
 
 	g.Go(func() error {
-		entityCountResult := e.GetTotalEntityCount(projectId, tableName, entityFilter)
+		entityCountResult := e.entityCountFetcher.FetchTotalEntityCount(
+			projectId,
+			tableName,
+			entityFilter,
+		)
 
 		if entityCountResult.IsErr() {
 			return entityCountResult.UnwrapErr()
