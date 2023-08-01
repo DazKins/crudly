@@ -35,6 +35,8 @@ func (p *postgresEntityCount) FetchTotalEntityCount(
 		return result.Err[uint](errs.TableNotFoundError{})
 	}
 
+	defer rows.Close()
+
 	totalCount := uint(0)
 
 	rows.Scan(&totalCount)
