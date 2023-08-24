@@ -42,7 +42,11 @@ func (r *redisRateLimitStore) GetCurrentCallCount(projectId model.ProjectId) res
 	val, err := r.redisClient.Get(context.Background(), getRedisKey(projectId)).Result()
 
 	if err != nil {
-		return result.Errf[uint]("error getting redis key: %w", err)
+		if err == redis.Nil {
+			return result.Ok(uint(0))
+		}
+
+		return result.Errf[uint]("unexpected error getting redis key: %w", err)
 	}
 
 	integer, err := strconv.Atoi(val)
