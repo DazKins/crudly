@@ -23,7 +23,7 @@ func NewRedisRateLimiterStore(redisClient *redis.Client) redisRateLimitStore {
 func (r *redisRateLimitStore) IncrementCallCount(projectId model.ProjectId, ttl time.Duration) result.R[uint] {
 	redisKey := getRedisKey(projectId)
 
-	val, err := r.redisClient.Incr(context.Background(), redisKey).Result()
+	val, err := r.redisClient.IncrBy(context.Background(), redisKey, 1).Result()
 	if err != nil {
 		return result.Errf[uint]("error incrementing redis key: %w", err)
 	}
