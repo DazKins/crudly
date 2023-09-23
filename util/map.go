@@ -9,3 +9,11 @@ func GetMapKeys[K comparable, V any](m map[K]V) []K {
 
 	return keys
 }
+
+func CopyMap[K comparable, V any](m map[K]V) map[K]V {
+	c := map[K]V{}
+	for k, v := range m {
+		c[k] = v
+	}
+	return c
+}

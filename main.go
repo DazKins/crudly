@@ -28,13 +28,16 @@ func main() {
 	postgresTableCreatorService := service.NewPostgresTableCreator(postgres)
 	postgresTableGetterService := service.NewPostgresTableFetcher(postgres)
 	postgresTableDeleterService := service.NewPostgresTableDeleter(postgres)
+	postgresTableFieldAdderService := service.NewPostgresTableFieldAdder(postgres)
+
 	postgresEntityFetcherService := service.NewPostgresEntityFetcher(postgres)
 	postgresEntityCreatorService := service.NewPostgresEntityCreator(postgres)
 	postgresEntityUpdaterService := service.NewPostgresEntityUpdater(postgres)
+	postgresEntityDeleterService := service.NewPostgresEntityDeleter(postgres)
 	postgresEntityCountService := service.NewPostgresEntityCount(postgres)
+
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
-	postgresEntityDeleterService := service.NewPostgresEntityDeleter(postgres)
 
 	redisRateLimitStoreService := service.NewRedisRateLimiterStore(redis)
 
@@ -49,6 +52,7 @@ func main() {
 		&postgresTableGetterService,
 		&postgresTableCreatorService,
 		&postgresTableDeleterService,
+		&postgresTableFieldAdderService,
 		&tableSchemaValidator,
 	)
 	entityManager := app.NewEntityManager(

@@ -10,6 +10,7 @@ import (
 	"crudly/http/dto"
 	"crudly/http/middleware"
 	"crudly/model"
+	"crudly/util/optional"
 	"crudly/util/result"
 
 	"github.com/gorilla/mux"
@@ -32,21 +33,34 @@ type tableDeleter interface {
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
 }
 
+type tableFieldAdder interface {
+	AddField(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		name model.FieldName,
+		definition model.FieldDefinition,
+		defaultValue optional.O[any],
+	) error
+}
+
 type tableHandler struct {
 	tableCreator      tableCreator
 	tableSchemaGetter tableSchemaGetter
 	tableDeleter      tableDeleter
+	tableFieldAdder   tableFieldAdder
 }
 
 func NewTableHandler(
 	tableCreator tableCreator,
 	tableSchemaGetter tableSchemaGetter,
 	tableDeleter tableDeleter,
+	tableFieldAdder tableFieldAdder,
 ) tableHandler {
 	return tableHandler{
 		tableCreator,
 		tableSchemaGetter,
 		tableDeleter,
+		tableFieldAdder,
 	}
 }
 
@@ -195,4 +209,65 @@ func (t *tableHandler) DeleteTable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(204)
+}
+
+func (t *tableHandler) AddField(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+
+	vars := mux.Vars(r)
+
+	tableNameDto := dto.TableNameDto(vars["tableName"])
+
+	tableNameResult := tableNameDto.ToModel()
+
+	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		panic("error reading body")
+	}
+
+	var fieldCreationRequestDto dto.FieldCreationRequestDto
+	json.Unmarshal(bodyBytes, &fieldCreationRequestDto)
+
+	fieldCreationRequestResult := fieldCreationRequestDto.ToModel()
+
+	if fieldCreationRequestResult.IsErr() {
+		middleware.AttachError(w, fieldCreationRequestResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid request body"))
+		return
+	}
+
+	fieldCreationRequest := fieldCreationRequestResult.Unwrap()
+
+	err = t.tableFieldAdder.AddField(
+		projectId,
+		tableNameResult.Unwrap(),
+		fieldCreationRequest.Name,
+		fieldCreationRequest.Definition,
+		fieldCreationRequest.DefaultValue,
+	)
+
+	if err != nil {
+		middleware.AttachError(w, err)
+
+		if err, ok := err.(errs.MissingDefaultValue); ok {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error creating table"))
+		return
+	}
+
+	w.WriteHeader(200)
 }

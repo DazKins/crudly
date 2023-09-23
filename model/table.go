@@ -55,3 +55,9 @@ func (t TableName) String() string {
 }
 
 type TableSchemas map[TableName]TableSchema
+
+type FieldCreationRequest struct {
+	Name         FieldName
+	Definition   FieldDefinition
+	DefaultValue optional.O[any]
+}

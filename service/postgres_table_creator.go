@@ -119,21 +119,3 @@ func getPostgresFieldQuery(key model.FieldName, fieldDefinition model.FieldDefin
 
 	return fieldQuery
 }
-
-func getPostgresDatatype(fieldType model.FieldType) string {
-	switch fieldType {
-	case model.FieldTypeId:
-		return "uuid"
-	case model.FieldTypeBoolean:
-		return "boolean"
-	case model.FieldTypeInteger:
-		return "integer"
-	case model.FieldTypeString:
-		return "varchar"
-	case model.FieldTypeTime:
-		return "timestamp"
-	case model.FieldTypeEnum:
-		return "varchar"
-	}
-	panic(fmt.Sprintf("invalid field type has entered the system: %+v", fieldType))
-}

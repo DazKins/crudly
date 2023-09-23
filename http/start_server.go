@@ -5,6 +5,7 @@ import (
 	"crudly/http/handler"
 	"crudly/http/middleware"
 	"crudly/model"
+	"crudly/util/optional"
 	"crudly/util/result"
 	"fmt"
 	"net/http"
@@ -23,6 +24,13 @@ type tableManager interface {
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 	GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas]
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
+	AddField(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		name model.FieldName,
+		definition model.FieldDefinition,
+		defaultValue optional.O[any],
+	) error
 }
 
 type entityManager interface {
@@ -84,6 +92,7 @@ func createHandler(
 ) http.Handler {
 	projectHandler := handler.NewProjectHandler(config, projectManager)
 	tableHandler := handler.NewTableHandler(
+		tableManager,
 		tableManager,
 		tableManager,
 		tableManager,
@@ -151,6 +160,11 @@ func createHandler(
 		"/{tableName}",
 		tableHandler.DeleteTable,
 	).Methods("DELETE")
+
+	tableRouter.HandleFunc(
+		"/{tableName}/addField",
+		tableHandler.AddField,
+	).Methods("POST")
 
 	tableRouter.HandleFunc(
 		"/{tableName}/totalEntityCount",

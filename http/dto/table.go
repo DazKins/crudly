@@ -147,3 +147,29 @@ func GetTableSchemasDto(tableSchemas model.TableSchemas) TableSchemasDto {
 
 	return result
 }
+
+type FieldCreationRequestDto struct {
+	Name         FieldNameDto       `json:"name"`
+	Definition   FieldDefinitionDto `json:"definition"`
+	DefaultValue *any               `json:"defaultValue,omitempty"`
+}
+
+func (f FieldCreationRequestDto) ToModel() result.R[model.FieldCreationRequest] {
+	nameResult := f.Name.ToModel()
+
+	if nameResult.IsErr() {
+		return result.Err[model.FieldCreationRequest](fmt.Errorf("error parsing field name: %w", nameResult.UnwrapErr()))
+	}
+
+	definitionResult := f.Definition.ToModel()
+
+	if definitionResult.IsErr() {
+		return result.Err[model.FieldCreationRequest](fmt.Errorf("error parsing field definition: %w", definitionResult.UnwrapErr()))
+	}
+
+	return result.Ok(model.FieldCreationRequest{
+		Name:         nameResult.Unwrap(),
+		Definition:   definitionResult.Unwrap(),
+		DefaultValue: optional.FromPointer(f.DefaultValue),
+	})
+}
