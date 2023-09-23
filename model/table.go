@@ -61,3 +61,7 @@ type FieldCreationRequest struct {
 	Definition   FieldDefinition
 	DefaultValue optional.O[any]
 }
+
+type FieldDeletionRequest struct {
+	Name FieldName
+}

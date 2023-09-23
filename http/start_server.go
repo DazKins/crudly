@@ -20,7 +20,11 @@ type projectManager interface {
 }
 
 type tableManager interface {
-	CreateTable(projectId model.ProjectId, name model.TableName, schema model.TableSchema) error
+	CreateTable(
+		projectId model.ProjectId,
+		name model.TableName,
+		schema model.TableSchema,
+	) error
 	GetTableSchema(projectId model.ProjectId, name model.TableName) result.R[model.TableSchema]
 	GetTableSchemas(projectId model.ProjectId) result.R[model.TableSchemas]
 	DeleteTable(projectId model.ProjectId, name model.TableName) error
@@ -30,6 +34,11 @@ type tableManager interface {
 		name model.FieldName,
 		definition model.FieldDefinition,
 		defaultValue optional.O[any],
+	) error
+	DeleteField(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		name model.FieldName,
 	) error
 }
 
@@ -92,6 +101,7 @@ func createHandler(
 ) http.Handler {
 	projectHandler := handler.NewProjectHandler(config, projectManager)
 	tableHandler := handler.NewTableHandler(
+		tableManager,
 		tableManager,
 		tableManager,
 		tableManager,
@@ -164,6 +174,11 @@ func createHandler(
 	tableRouter.HandleFunc(
 		"/{tableName}/addField",
 		tableHandler.AddField,
+	).Methods("POST")
+
+	tableRouter.HandleFunc(
+		"/{tableName}/deleteField",
+		tableHandler.DeleteField,
 	).Methods("POST")
 
 	tableRouter.HandleFunc(

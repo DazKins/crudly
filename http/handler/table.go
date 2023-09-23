@@ -43,11 +43,20 @@ type tableFieldAdder interface {
 	) error
 }
 
+type tableFieldDeleter interface {
+	DeleteField(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		name model.FieldName,
+	) error
+}
+
 type tableHandler struct {
 	tableCreator      tableCreator
 	tableSchemaGetter tableSchemaGetter
 	tableDeleter      tableDeleter
 	tableFieldAdder   tableFieldAdder
+	tableFieldDeleter tableFieldDeleter
 }
 
 func NewTableHandler(
@@ -55,12 +64,14 @@ func NewTableHandler(
 	tableSchemaGetter tableSchemaGetter,
 	tableDeleter tableDeleter,
 	tableFieldAdder tableFieldAdder,
+	tableFieldDeleter tableFieldDeleter,
 ) tableHandler {
 	return tableHandler{
 		tableCreator,
 		tableSchemaGetter,
 		tableDeleter,
 		tableFieldAdder,
+		tableFieldDeleter,
 	}
 }
 
@@ -265,7 +276,66 @@ func (t *tableHandler) AddField(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(500)
-		w.Write([]byte("unexpected error creating table"))
+		w.Write([]byte("unexpected error creating field"))
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
+func (t *tableHandler) DeleteField(w http.ResponseWriter, r *http.Request) {
+	projectId := ctx.GetRequestProjectId(r)
+
+	vars := mux.Vars(r)
+
+	tableNameDto := dto.TableNameDto(vars["tableName"])
+
+	tableNameResult := tableNameDto.ToModel()
+
+	if tableNameResult.IsErr() {
+		middleware.AttachError(w, tableNameResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid table name"))
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		panic("error reading body")
+	}
+
+	var fieldDeletionRequestDto dto.FieldDeletionRequestDto
+	json.Unmarshal(bodyBytes, &fieldDeletionRequestDto)
+
+	fieldDeletionRequestResult := fieldDeletionRequestDto.ToModel()
+
+	if fieldDeletionRequestResult.IsErr() {
+		middleware.AttachError(w, fieldDeletionRequestResult.UnwrapErr())
+		w.WriteHeader(400)
+		w.Write([]byte("invalid request body"))
+		return
+	}
+
+	fieldDeletionRequest := fieldDeletionRequestResult.Unwrap()
+
+	err = t.tableFieldDeleter.DeleteField(
+		projectId,
+		tableNameResult.Unwrap(),
+		fieldDeletionRequest.Name,
+	)
+
+	if err != nil {
+		middleware.AttachError(w, err)
+
+		if _, ok := err.(errs.FieldNotFoundError); ok {
+			w.WriteHeader(400)
+			w.Write([]byte("field not found"))
+			return
+		}
+
+		w.WriteHeader(500)
+		w.Write([]byte("unexpected error deleting field"))
 		return
 	}
 

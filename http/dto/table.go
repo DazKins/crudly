@@ -173,3 +173,19 @@ func (f FieldCreationRequestDto) ToModel() result.R[model.FieldCreationRequest] 
 		DefaultValue: optional.FromPointer(f.DefaultValue),
 	})
 }
+
+type FieldDeletionRequestDto struct {
+	Name FieldNameDto `json:"name"`
+}
+
+func (f FieldDeletionRequestDto) ToModel() result.R[model.FieldDeletionRequest] {
+	nameResult := f.Name.ToModel()
+
+	if nameResult.IsErr() {
+		return result.Err[model.FieldDeletionRequest](fmt.Errorf("error parsing field name: %w", nameResult.UnwrapErr()))
+	}
+
+	return result.Ok(model.FieldDeletionRequest{
+		Name: nameResult.Unwrap(),
+	})
+}

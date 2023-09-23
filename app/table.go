@@ -45,6 +45,15 @@ type tableFieldAdder interface {
 	) error
 }
 
+type tableFieldDeleter interface {
+	DeleteField(
+		projectId model.ProjectId,
+		tableName model.TableName,
+		existingSchema model.TableSchema,
+		name model.FieldName,
+	) error
+}
+
 type tableSchemaValidator interface {
 	ValidateTableSchema(schema model.TableSchema) error
 }
@@ -54,6 +63,7 @@ type tableManager struct {
 	tableCreator         tableCreator
 	tableDeleter         tableDeleter
 	tableFieldAdder      tableFieldAdder
+	tableFieldDeleter    tableFieldDeleter
 	tableSchemaValidator tableSchemaValidator
 }
 
@@ -62,6 +72,7 @@ func NewTableManager(
 	tableCreator tableCreator,
 	tableDeleter tableDeleter,
 	tableFieldAdder tableFieldAdder,
+	tableFieldDeleter tableFieldDeleter,
 	tableSchemaValidator tableSchemaValidator,
 ) tableManager {
 	return tableManager{
@@ -69,6 +80,7 @@ func NewTableManager(
 		tableCreator,
 		tableDeleter,
 		tableFieldAdder,
+		tableFieldDeleter,
 		tableSchemaValidator,
 	}
 }
@@ -154,4 +166,35 @@ func (t *tableManager) AddField(
 	)
 
 	return err
+}
+
+func (t *tableManager) DeleteField(
+	projectId model.ProjectId,
+	tableName model.TableName,
+	name model.FieldName,
+) error {
+	tableSchemaResult := t.tableSchemaFetcher.FetchTableSchema(projectId, tableName)
+
+	if tableSchemaResult.IsErr() {
+		err := tableSchemaResult.UnwrapErr()
+
+		if _, ok := err.(errs.TableNotFoundError); ok {
+			return err
+		}
+
+		return fmt.Errorf("error fetching table schema: %w", tableSchemaResult.UnwrapErr())
+	}
+
+	tableSchema := tableSchemaResult.Unwrap()
+
+	if _, ok := tableSchema[name]; !ok {
+		return errs.FieldNotFoundError{}
+	}
+
+	return t.tableFieldDeleter.DeleteField(
+		projectId,
+		tableName,
+		tableSchemaResult.Unwrap(),
+		name,
+	)
 }
