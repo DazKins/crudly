@@ -121,7 +121,7 @@ func validateFieldFilter(
 			return fmt.Errorf("filter comparator is not a boolean: %s", comparator)
 		}
 	case model.FieldTypeTime:
-		time, err := time.Parse(TimeFormat, comparator)
+		time, err := time.Parse(IncomingTimeFormat, comparator)
 
 		if err != nil {
 			return fmt.Errorf("filter comparator is not a timestamp: %s", comparator)

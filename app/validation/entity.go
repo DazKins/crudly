@@ -44,7 +44,7 @@ func (e *entityValidator) ValidateEntity(entity model.Entity, tableSchema model.
 	return nil
 }
 
-const TimeFormat = "2006-01-02T15:04:05"
+const IncomingTimeFormat = time.RFC3339
 
 func validateField(
 	entity model.Entity,
@@ -115,7 +115,7 @@ func validateField(
 			return fmt.Errorf("field: \"%s\" is not a valid time", fieldName)
 		}
 
-		time, err := time.Parse(TimeFormat, stringVal)
+		time, err := time.Parse(IncomingTimeFormat, stringVal)
 
 		if err != nil {
 			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, err)

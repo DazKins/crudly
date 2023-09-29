@@ -98,7 +98,7 @@ func validatePartialField(
 			return fmt.Errorf("field: \"%s\" is not a valid time", fieldName)
 		}
 
-		time, err := time.Parse(TimeFormat, stringVal)
+		time, err := time.Parse(IncomingTimeFormat, stringVal)
 
 		if err != nil {
 			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, err)
