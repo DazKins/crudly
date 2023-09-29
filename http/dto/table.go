@@ -150,7 +150,7 @@ func GetTableSchemasDto(tableSchemas model.TableSchemas) TableSchemasDto {
 
 type FieldCreationRequestDto struct {
 	Name         FieldNameDto       `json:"name"`
-	Definition   FieldDefinitionDto `json:"definition"`
+	Definition   FieldDefinitionDto `json:"schema"`
 	DefaultValue *any               `json:"defaultValue,omitempty"`
 }
 

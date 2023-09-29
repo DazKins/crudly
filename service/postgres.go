@@ -53,5 +53,5 @@ func getPostgresFieldValue(field any) result.R[string] {
 	case time.Time:
 		return result.Ok("'" + v.Format(PostgresTimeFormat) + "'")
 	}
-	return result.Err[string](fmt.Errorf("field: %+v has unsupported type", field))
+	return result.Err[string](fmt.Errorf("field: %+v has unsupported type: ", field))
 }

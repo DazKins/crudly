@@ -5,6 +5,7 @@ import (
 	"crudly/util/result"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,7 +24,13 @@ func (e EntityIdDto) ToModel() result.R[model.EntityId] {
 
 type FieldDto any
 
+const TimeFormat = "2006-01-02T15:04:05"
+
 func GetFieldDto(field model.Field) FieldDto {
+	if time, ok := field.(time.Time); ok {
+		return time.Format(TimeFormat)
+	}
+
 	return FieldDto(any(field))
 }
 

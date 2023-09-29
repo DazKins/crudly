@@ -44,7 +44,7 @@ func (e *entityValidator) ValidateEntity(entity model.Entity, tableSchema model.
 	return nil
 }
 
-const TimeFormat = "2006-01-02T15:04:05Z"
+const TimeFormat = "2006-01-02T15:04:05"
 
 func validateField(
 	entity model.Entity,
