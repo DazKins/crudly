@@ -40,6 +40,10 @@ func validatePartialField(
 ) error {
 	field := partialEntity[fieldName]
 
+	if fieldDefinition.IsOptional && field == nil {
+		return nil
+	}
+
 	switch fieldDefinition.Type {
 	case model.FieldTypeId:
 		stringVal, ok := field.(string)
