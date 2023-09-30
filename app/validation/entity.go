@@ -5,7 +5,6 @@ import (
 	"crudly/util"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -44,7 +43,7 @@ func (e *entityValidator) ValidateEntity(entity model.Entity, tableSchema model.
 	return nil
 }
 
-const IncomingTimeFormat = time.RFC3339
+const IncomingTimeFormat = "2006-01-02T15:04:05"
 
 func validateField(
 	entity model.Entity,
@@ -119,13 +118,13 @@ func validateField(
 			return fmt.Errorf("field: \"%s\" is not a valid time", fieldName)
 		}
 
-		time, err := time.Parse(IncomingTimeFormat, stringVal)
+		timeResult := util.ValidateIncomingTime(stringVal)
 
-		if err != nil {
-			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, err)
+		if timeResult.IsErr() {
+			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, timeResult.UnwrapErr())
 		}
 
-		entity[fieldName] = time
+		entity[fieldName] = timeResult.Unwrap()
 
 		return nil
 	case model.FieldTypeEnum:

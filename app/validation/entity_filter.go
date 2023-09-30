@@ -5,7 +5,6 @@ import (
 	"crudly/util"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -121,13 +120,13 @@ func validateFieldFilter(
 			return fmt.Errorf("filter comparator is not a boolean: %s", comparator)
 		}
 	case model.FieldTypeTime:
-		time, err := time.Parse(IncomingTimeFormat, comparator)
+		timeResult := util.ValidateIncomingTime(comparator)
 
-		if err != nil {
+		if timeResult.IsErr() {
 			return fmt.Errorf("filter comparator is not a timestamp: %s", comparator)
 		}
 
-		parsedFieldFilter.Comparator = time
+		parsedFieldFilter.Comparator = timeResult.Unwrap()
 	case model.FieldTypeEnum:
 		vals := fieldDefinition.Values
 

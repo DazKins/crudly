@@ -5,7 +5,6 @@ import (
 	"crudly/util"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -102,13 +101,13 @@ func validatePartialField(
 			return fmt.Errorf("field: \"%s\" is not a valid time", fieldName)
 		}
 
-		time, err := time.Parse(IncomingTimeFormat, stringVal)
+		timeResult := util.ValidateIncomingTime(stringVal)
 
-		if err != nil {
-			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, err)
+		if timeResult.IsErr() {
+			return fmt.Errorf("error parsing field \"%s\" as time: %w", fieldName, timeResult.UnwrapErr())
 		}
 
-		partialEntity[fieldName] = time
+		partialEntity[fieldName] = timeResult.Unwrap()
 
 		return nil
 	case model.FieldTypeEnum:
