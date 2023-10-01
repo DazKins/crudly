@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"crudly/errs"
 	"crudly/model"
 	"crudly/util/result"
 	"fmt"
@@ -11,30 +12,50 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type rateLimiterStore interface {
+type callCountStore interface {
 	IncrementCallCount(projectId model.ProjectId, ttl time.Duration) result.R[uint]
 	GetCurrentCallCount(projectId model.ProjectId) result.R[uint]
 }
 
+type rateLimitStore interface {
+	GetRateLimit(projectId model.ProjectId) result.R[uint]
+}
+
 type rateLimitManager struct {
-	rateLimiterStore     rateLimiterStore
+	callCountStore       callCountStore
+	rateLimitStore       rateLimitStore
 	blockedProjectsCache map[model.ProjectId]struct{}
 	mu                   sync.Mutex
 }
 
-func NewRateLimitManager(rateLimiterStore rateLimiterStore) rateLimitManager {
+func NewRateLimitManager(callCountStore callCountStore, rateLimitStore rateLimitStore) rateLimitManager {
 	return rateLimitManager{
-		rateLimiterStore:     rateLimiterStore,
+		callCountStore:       callCountStore,
+		rateLimitStore:       rateLimitStore,
 		blockedProjectsCache: map[model.ProjectId]struct{}{},
 	}
 }
 
+const DEFAULT_RATE_LIMIT = uint(50_000)
+
 func (r *rateLimitManager) GetDailyRateLimit(projectId model.ProjectId) result.R[uint] {
-	return result.Ok(uint(50_000)) // TODO store and manage per project somewhere
+	rateLimitResult := r.rateLimitStore.GetRateLimit(projectId)
+
+	if rateLimitResult.IsErr() {
+		err := rateLimitResult.UnwrapErr()
+
+		if _, ok := err.(errs.RateLimitNotFoundError); ok {
+			return result.Ok(DEFAULT_RATE_LIMIT)
+		}
+
+		return result.Errf[uint]("error getting rate limit: %w", rateLimitResult.UnwrapErr())
+	}
+
+	return rateLimitResult
 }
 
 func (r *rateLimitManager) GetCurrentRateUsage(projectId model.ProjectId) result.R[uint] {
-	return r.rateLimiterStore.GetCurrentCallCount(projectId)
+	return r.callCountStore.GetCurrentCallCount(projectId)
 }
 
 func (r *rateLimitManager) HandleUsage(projectId model.ProjectId) error {
@@ -43,7 +64,7 @@ func (r *rateLimitManager) HandleUsage(projectId model.ProjectId) error {
 	g, _ := errgroup.WithContext(context.Background())
 
 	g.Go(func() error {
-		incrementRateUsageResult := r.rateLimiterStore.IncrementCallCount(projectId, time.Hour*24)
+		incrementRateUsageResult := r.callCountStore.IncrementCallCount(projectId, time.Hour*24)
 
 		if incrementRateUsageResult.IsErr() {
 			return fmt.Errorf("error incrementing rate usage: %w", incrementRateUsageResult.UnwrapErr())

@@ -41,6 +41,7 @@ func main() {
 	postgresProjectCreatorService := service.NewPostgresProjectCreator(postgres)
 	postgresProjectAuthInfoFetcherService := service.NewPostgresProjectAuthFetcher(postgres)
 
+	postgresRateLimitStoreService := service.NewPostgresRateLimitStore(postgres)
 	redisRateLimitStoreService := service.NewRedisRateLimiterStore(redis)
 
 	entityValidator := validation.NewEntityValidator()
@@ -70,7 +71,10 @@ func main() {
 		&entityFilterValidator,
 		&entityOrderValidator,
 	)
-	rateLimitManager := app.NewRateLimitManager(&redisRateLimitStoreService)
+	rateLimitManager := app.NewRateLimitManager(
+		&redisRateLimitStoreService,
+		&postgresRateLimitStoreService,
+	)
 
 	http.StartServer(
 		config,
