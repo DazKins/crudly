@@ -19,6 +19,7 @@ type callCountStore interface {
 
 type rateLimitStore interface {
 	GetRateLimit(projectId model.ProjectId) result.R[uint]
+	SetRateLimit(projectId model.ProjectId, rateLimit uint) error
 }
 
 type rateLimitManager struct {
@@ -37,6 +38,10 @@ func NewRateLimitManager(callCountStore callCountStore, rateLimitStore rateLimit
 }
 
 const DEFAULT_RATE_LIMIT = uint(50_000)
+
+func (r *rateLimitManager) SetDailyRateLimit(projectId model.ProjectId, rateLimit uint) error {
+	return r.rateLimitStore.SetRateLimit(projectId, rateLimit)
+}
 
 func (r *rateLimitManager) GetDailyRateLimit(projectId model.ProjectId) result.R[uint] {
 	rateLimitResult := r.rateLimitStore.GetRateLimit(projectId)
