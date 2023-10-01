@@ -457,6 +457,12 @@ func (e *entityHandler) PatchEntity(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if _, ok := err.(errs.EntityNotFoundError); ok {
+			w.WriteHeader(404)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
 		w.WriteHeader(500)
 		w.Write([]byte("unexpected error updating entity"))
 		return
