@@ -129,19 +129,16 @@ func createHandler(
 	router.Use(loggerMiddleware)
 	router.Use(adminApiKeyMiddleware)
 
-	projectRouter := router.PathPrefix("/projects").Subrouter()
-	projectRouter.Use(adminAuthMiddleware)
+	adminRouter := router.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(adminAuthMiddleware)
 
-	projectRouter.HandleFunc(
-		"",
+	adminRouter.HandleFunc(
+		"/projects",
 		projectHandler.PostProject,
 	).Methods("POST")
 
-	rateLimitUpdateRouter := router.PathPrefix("/rateLimitUpdate").Subrouter()
-	rateLimitUpdateRouter.Use(adminAuthMiddleware)
-
-	rateLimitUpdateRouter.HandleFunc(
-		"",
+	adminRouter.HandleFunc(
+		"/rateLimitUpdate",
 		rateLimitHandler.PostRateLimit,
 	).Methods("POST")
 
