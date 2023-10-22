@@ -142,6 +142,15 @@ func createHandler(
 		rateLimitHandler.PostRateLimit,
 	).Methods("POST")
 
+	adminTableRouter := adminRouter.PathPrefix("/tables/{tableName}").Subrouter()
+	adminTableRouter.Use(projectIdMiddleware)
+	adminTableRouter.Use(tableNameMiddleware)
+
+	adminTableRouter.HandleFunc(
+		"",
+		tableHandler.PutTable,
+	).Methods("PUT")
+
 	rateLimitRouter := router.PathPrefix("/rateLimit").Subrouter()
 	rateLimitRouter.Use(projectIdMiddleware)
 	rateLimitRouter.Use(projectAuthMiddleware)
@@ -156,11 +165,6 @@ func createHandler(
 	tableRouter.Use(projectAuthMiddleware)
 	tableRouter.Use(rateLimitMiddleware)
 	tableRouter.Use(tableNameMiddleware)
-
-	tableRouter.HandleFunc(
-		"/{tableName}",
-		tableHandler.PutTable,
-	).Methods("PUT")
 
 	tableRouter.HandleFunc(
 		"",
